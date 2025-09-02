@@ -1,5 +1,6 @@
 import { Alova } from '@/utils/http/alova/index';
 export interface ListDate {
+  id: number;
   label: string;
   key: string;
   type: number;
@@ -25,4 +26,12 @@ export function getMenuList(params?) {
   return Alova.Get<{ list: ListDate[] }>('/menu/list', {
     params,
   });
+}
+
+/**
+ * 添加菜单
+ * @param data
+ */
+export function addMenu(data) {
+  return Alova.Post('/menu/add', data);
 }

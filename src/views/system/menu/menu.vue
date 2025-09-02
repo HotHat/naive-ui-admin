@@ -133,6 +133,7 @@
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
   import type { ListDate } from '@/api/system/menu';
+import { tr } from 'date-fns/locale';
 
   const rules = {
     label: {
@@ -153,6 +154,7 @@
   const dialog = useDialog();
 
   let treeItemKey = ref([]);
+  let treeItemId = ref(0);
 
   let expandedKeys = ref([]);
 
@@ -193,18 +195,19 @@
 
   function selectAddMenu(key: string) {
     drawerTitle.value = key === 'home' ? '添加顶栏菜单' : `添加子菜单：${treeItemTitle.value}`;
-    openCreateDrawer();
+    openCreateDrawer(treeItemId.value);
   }
 
-  function openCreateDrawer() {
+  function openCreateDrawer(parentId: number) {
     const { openDrawer } = createDrawerRef.value;
-    openDrawer();
+    openDrawer(parentId);
   }
 
   function selectedTree(keys) {
     if (keys.length) {
       const treeItem = getTreeItem(unref(treeData), keys[0]);
       treeItemKey.value = keys;
+      treeItemId.value = treeItem.id;
       treeItemTitle.value = treeItem.label;
       Object.assign(formParams, treeItem);
       isEditMenu.value = true;

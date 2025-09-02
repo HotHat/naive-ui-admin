@@ -98,8 +98,8 @@ export const Alova = createAlova({
       if (ResultEnum.SUCCESS === code) {
         return result;
       }
-      // 需要登录
-      if (code === 912) {
+      // 需要登录 http 401 Unauthorized
+      if (code === 401) {
         Modal?.warning({
           title: '提示',
           content: '登录身份已失效，请重新登录!',

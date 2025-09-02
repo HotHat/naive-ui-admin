@@ -49,6 +49,7 @@
 <script lang="ts" setup>
   import { reactive, ref, toRefs } from 'vue';
   import { useMessage } from 'naive-ui';
+  import { addMenu } from '@/api/system/menu';
 
   const rules = {
     label: {
@@ -77,6 +78,7 @@
   const message = useMessage();
   const formRef: any = ref(null);
   const defaultValueRef = () => ({
+    parentId: 0,
     label: '',
     type: 1,
     subtitle: '',
@@ -92,8 +94,9 @@
     placement: 'right' as const,
   });
 
-  function openDrawer() {
+  function openDrawer(parentId: 0) {
     state.isDrawer = true;
+    formParams.value.parentId = parentId;
   }
 
   function closeDrawer() {
@@ -101,9 +104,12 @@
   }
 
   function formSubmit() {
-    formRef.value.validate((errors) => {
+    formRef.value.validate(async (errors) => {
       if (!errors) {
         message.success('添加成功');
+        const data = formParams.value;
+        await addMenu(data);
+
         handleReset();
         closeDrawer();
       } else {
@@ -116,4 +122,8 @@
     formRef.value.restoreValidation();
     formParams.value = Object.assign(formParams.value, defaultValueRef());
   }
+  defineExpose({
+    openDrawer,
+    closeDrawer,
+  });
 </script>
