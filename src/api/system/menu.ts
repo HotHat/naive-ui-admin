@@ -1,6 +1,7 @@
 import { Alova } from '@/utils/http/alova/index';
-export interface ListDate {
+export interface ListMenu {
   id: number;
+  parentId: number;
   label: string;
   key: string;
   type: number;
@@ -8,7 +9,7 @@ export interface ListDate {
   openType: number;
   auth: string;
   path: string;
-  children?: ListDate[];
+  children?: ListMenu[];
 }
 
 /**
@@ -23,7 +24,7 @@ export function adminMenus() {
  * @param params
  */
 export function getMenuList(params?) {
-  return Alova.Get<{ list: ListDate[] }>('/menu/list', {
+  return Alova.Get<{ list: ListMenu[] }>('/menu/list', {
     params,
   });
 }

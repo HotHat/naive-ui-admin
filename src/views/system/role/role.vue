@@ -75,7 +75,7 @@
   import { getTreeAll } from '@/utils';
   import CreateModal from './CreateModal.vue';
   import EditModal from './EditModal.vue';
-  import type { ListDate } from '@/api/system/menu';
+  import type { ListMenu } from '@/api/system/menu';
 
   const message = useMessage();
   const actionRef = ref();
@@ -85,7 +85,7 @@
   const formBtnLoading = ref(false);
   const checkedAll = ref(false);
   const editRoleTitle = ref('');
-  const treeData = ref<ListDate[]>([]);
+  const treeData = ref<ListMenu[]>([]);
   const expandedKeys = ref<string[]>([]);
   const checkedKeys = ref<string[]>(['console', 'step-form']);
 

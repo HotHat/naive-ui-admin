@@ -1,11 +1,12 @@
 import { defineMock } from '@alova/mock';
 import { resultSuccess } from '../_util';
-import type { ListDate } from '@/api/system/menu';
+import type { ListMenu } from '@/api/system/menu';
 
 const menuList = () => {
-  const result: ListDate[] = [
+  const result: ListMenu[] = [
     {
       id: 1,
+      parentId: 0,
       label: 'Dashboard',
       key: 'dashboard',
       type: 1,
@@ -16,6 +17,7 @@ const menuList = () => {
       children: [
         {
           id: 2,
+          parentId: 1,
           label: '主控台',
           key: 'console',
           type: 1,
@@ -26,6 +28,7 @@ const menuList = () => {
         },
         {
           id: 3,
+          parentId: 1,
           label: '工作台',
           key: 'workplace',
           type: 1,
@@ -38,6 +41,7 @@ const menuList = () => {
     },
     {
       id: 4,
+      parentId: 0,
       label: '表单管理',
       key: 'form',
       type: 1,
@@ -48,6 +52,7 @@ const menuList = () => {
       children: [
         {
           id: 5,
+          parentId: 4,
           label: '基础表单',
           key: 'basic-form',
           type: 1,
@@ -58,6 +63,7 @@ const menuList = () => {
         },
         {
           id: 6,
+          parentId: 4,
           label: '分步表单',
           key: 'step-form',
           type: 1,
@@ -68,6 +74,7 @@ const menuList = () => {
         },
         {
           id: 7,
+          parentId: 4,
           label: '表单详情',
           key: 'detail',
           type: 1,

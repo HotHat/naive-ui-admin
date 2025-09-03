@@ -86,28 +86,38 @@
             v-if="isEditMenu"
             class="py-4"
           >
-            <n-form-item label="类型" path="type">
+            <!-- <n-form-item label="类型" path="type">
               <span>{{ formParams.type === 1 ? '侧边栏菜单' : '' }}</span>
+            </n-form-item> -->
+            <n-form-item label="父级菜单" path="parentTitle">
+              <n-select :disabled="true" v-model:value="optionParentId" :options="selectOptions" />
             </n-form-item>
             <n-form-item label="标题" path="label">
               <n-input placeholder="请输入标题" v-model:value="formParams.label" />
             </n-form-item>
-            <n-form-item label="副标题" path="subtitle">
+            <!-- <n-form-item label="副标题" path="subtitle">
               <n-input placeholder="请输入副标题" v-model:value="formParams.subtitle" />
-            </n-form-item>
+            </n-form-item> -->
             <n-form-item label="路径" path="path">
               <n-input placeholder="请输入路径" v-model:value="formParams.path" />
             </n-form-item>
-            <n-form-item label="打开方式" path="openType">
+            <!-- <n-form-item label="打开方式" path="openType">
               <n-radio-group v-model:value="formParams.openType" name="openType">
                 <n-space>
                   <n-radio :value="1">当前窗口</n-radio>
                   <n-radio :value="2">新窗口</n-radio>
                 </n-space>
               </n-radio-group>
-            </n-form-item>
+            </n-form-item> -->
             <n-form-item label="菜单权限" path="auth">
-              <n-input placeholder="请输入权限，多个权限用，分割" v-model:value="formParams.auth" />
+              <n-input
+                type="textarea"
+                placeholder="请输入权限，多个权限用，分割"
+                v-model:value="formParams.auth"
+              />
+            </n-form-item>
+            <n-form-item label="排序" path="path" :validation-status="orderValidationStatus">
+              <n-input placeholder="请输入排序序号" v-model:value="formParams.order" />
             </n-form-item>
             <n-form-item path="auth" style="margin-left: 100px">
               <n-space>
@@ -132,8 +142,8 @@
   import { getMenuList } from '@/api/system/menu';
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
-  import type { ListDate } from '@/api/system/menu';
-import { tr } from 'date-fns/locale';
+  import type { ListMenu } from '@/api/system/menu';
+  import { tr } from 'date-fns/locale';
 
   const rules = {
     label: {
@@ -155,10 +165,12 @@ import { tr } from 'date-fns/locale';
 
   let treeItemKey = ref([]);
   let treeItemId = ref(0);
+  let optionParentId = ref(0);
 
   let expandedKeys = ref([]);
+  let selectOptions = ref<any>([]);
 
-  const treeData = ref<ListDate[]>([]);
+  const treeData = ref<ListMenu[]>([]);
 
   const loading = ref(true);
   const subLoading = ref(false);
@@ -186,11 +198,19 @@ import { tr } from 'date-fns/locale';
 
   const formParams = reactive({
     type: 1,
+    parentId: 0,
+    parentTitle: '',
     label: '',
     subtitle: '',
     path: '',
     auth: '',
     openType: 1,
+    order: '',
+  });
+
+  const orderValidationStatus = computed(() => {
+    const ord = formParams.order;
+    return ord == '' || Number.isInteger(Number.parseInt(ord)) ? undefined : 'error';
   });
 
   function selectAddMenu(key: string) {
@@ -211,10 +231,13 @@ import { tr } from 'date-fns/locale';
       treeItemTitle.value = treeItem.label;
       Object.assign(formParams, treeItem);
       isEditMenu.value = true;
+      optionParentId.value = treeItem.parentId;
     } else {
       isEditMenu.value = false;
       treeItemKey.value = [];
       treeItemTitle.value = '';
+      formParams.parentId = 0;
+      formParams.parentTitle = '';
     }
   }
 
@@ -256,9 +279,40 @@ import { tr } from 'date-fns/locale';
     }
   }
 
+  function flattenTree(nodes: any[]): any[] {
+    let flatNodes: any[] = [];
+
+    for (const node of nodes) {
+      // Add the current node to the flat array
+      flatNodes.push({
+        id: node.id,
+        label: node.label,
+        key: node.key,
+        type: node.type,
+        value: node.id,
+      });
+
+      // Recursively flatten children if they exist
+      if (node.children && node.children.length > 0) {
+        flatNodes = flatNodes.concat(flattenTree(node.children));
+      }
+    }
+
+    return flatNodes;
+  }
+
   onMounted(async () => {
     const treeMenuList = await getMenuList();
     const keys = treeMenuList.list.map((item) => item.key);
+    const flat = flattenTree(treeMenuList['list']);
+    flat.unshift({
+      id: 0,
+      label: '无父级菜单',
+      value: 0,
+    });
+    selectOptions.value = flat;
+    console.log(flat);
+    console.log(selectOptions.value);
     Object.assign(formParams, keys);
     treeData.value = treeMenuList.list;
     loading.value = false;
