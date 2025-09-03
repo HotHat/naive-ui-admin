@@ -116,7 +116,7 @@
                 v-model:value="formParams.auth"
               />
             </n-form-item>
-            <n-form-item label="排序" path="path" :validation-status="orderValidationStatus">
+            <n-form-item label="排序" path="order">
               <n-input placeholder="请输入排序序号" v-model:value="formParams.order" />
             </n-form-item>
             <n-form-item path="auth" style="margin-left: 100px">
@@ -143,7 +143,12 @@
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
   import type { ListMenu } from '@/api/system/menu';
-  import { tr } from 'date-fns/locale';
+
+  interface MenuParent {
+    id: number;
+    label: string;
+    value: number;
+  }
 
   const rules = {
     label: {
@@ -156,6 +161,17 @@
       message: '请输入路径',
       trigger: 'blur',
     },
+    order: {
+      validator: (rule, value) => {
+        // Convert the string value to a number before validation
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+          return new Error('排序必须是数字');
+        }
+        return true;
+      },
+      trigger: ['input', 'blur'],
+    },
   };
 
   const formRef: any = ref(null);
@@ -165,6 +181,12 @@
 
   let treeItemKey = ref([]);
   let treeItemId = ref(0);
+  let parentItem = ref<MenuParent>({
+    id: 0,
+    label: '无父级菜单',
+    value: 0,
+  });
+
   let optionParentId = ref(0);
 
   let expandedKeys = ref([]);
@@ -208,19 +230,22 @@
     order: '',
   });
 
-  const orderValidationStatus = computed(() => {
-    const ord = formParams.order;
-    return ord == '' || Number.isInteger(Number.parseInt(ord)) ? undefined : 'error';
-  });
-
   function selectAddMenu(key: string) {
     drawerTitle.value = key === 'home' ? '添加顶栏菜单' : `添加子菜单：${treeItemTitle.value}`;
-    openCreateDrawer(treeItemId.value);
+    if (key === 'home') {
+      parentItem.value = {
+        id: 0,
+        label: '无父级菜单',
+        value: 0,
+      };
+    }
+
+    openCreateDrawer(parentItem.value);
   }
 
-  function openCreateDrawer(parentId: number) {
+  function openCreateDrawer(parent: MenuParent) {
     const { openDrawer } = createDrawerRef.value;
-    openDrawer(parentId);
+    openDrawer(parent);
   }
 
   function selectedTree(keys) {
@@ -232,6 +257,11 @@
       Object.assign(formParams, treeItem);
       isEditMenu.value = true;
       optionParentId.value = treeItem.parentId;
+      parentItem.value = {
+        id: treeItem.id,
+        label: treeItem.label,
+        value: treeItem.id,
+      };
     } else {
       isEditMenu.value = false;
       treeItemKey.value = [];
@@ -266,7 +296,7 @@
       if (!errors) {
         message.error('抱歉，您没有该权限');
       } else {
-        message.error('请填写完整信息');
+        message.error('请填写完整信息' + JSON.stringify(errors));
       }
     });
   }

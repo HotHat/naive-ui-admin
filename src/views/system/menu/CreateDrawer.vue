@@ -8,28 +8,38 @@
         label-placement="left"
         :label-width="100"
       >
-        <n-form-item label="类型" path="type">
+        <!-- <n-form-item label="类型" path="type">
           <span>{{ formParams.type === 1 ? '侧边栏菜单' : '' }}</span>
+        </n-form-item> -->
+        <n-form-item label="父级菜单" path="parentTitle">
+          <n-select :disabled="true" v-model:value="parentItem.id" :options="selectOptions" />
         </n-form-item>
         <n-form-item label="标题" path="label">
           <n-input placeholder="请输入标题" v-model:value="formParams.label" />
         </n-form-item>
-        <n-form-item label="副标题" path="subtitle">
+        <!-- <n-form-item label="副标题" path="subtitle">
           <n-input placeholder="请输入副标题" v-model:value="formParams.subtitle" />
-        </n-form-item>
+        </n-form-item> -->
         <n-form-item label="路径" path="path">
           <n-input placeholder="请输入路径" v-model:value="formParams.path" />
         </n-form-item>
-        <n-form-item label="打开方式" path="openType">
+        <!-- <n-form-item label="打开方式" path="openType">
           <n-radio-group v-model:value="formParams.openType" name="openType">
             <n-space>
               <n-radio :value="1">当前窗口</n-radio>
               <n-radio :value="2">新窗口</n-radio>
             </n-space>
           </n-radio-group>
-        </n-form-item>
+        </n-form-item> -->
         <n-form-item label="菜单权限" path="auth">
-          <n-input placeholder="请输入权限，多个权限用，分割" v-model:value="formParams.auth" />
+          <n-input
+            placeholder="请输入权限，多个权限用，分割"
+            type="textarea"
+            v-model:value="formParams.auth"
+          />
+        </n-form-item>
+        <n-form-item label="排序" path="order">
+          <n-input placeholder="请输入排序序号" v-model:value="formParams.order" />
         </n-form-item>
         <n-form-item label="隐藏侧边栏" path="hidden">
           <n-switch v-model:value="formParams.hidden" />
@@ -47,9 +57,14 @@
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref, toRefs } from 'vue';
+  import { reactive, ref, toRefs, nextTick } from 'vue';
   import { useMessage } from 'naive-ui';
   import { addMenu } from '@/api/system/menu';
+  interface MenuParent {
+    id: number;
+    label: string;
+    value: number;
+  }
 
   const rules = {
     label: {
@@ -61,6 +76,17 @@
       required: true,
       message: '请输入路径',
       trigger: 'blur',
+    },
+    order: {
+      validator: (rule, value) => {
+        // Convert the string value to a number before validation
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+          return new Error('排序必须是数字');
+        }
+        return true;
+      },
+      trigger: ['input', 'blur'],
     },
   };
 
@@ -77,6 +103,13 @@
 
   const message = useMessage();
   const formRef: any = ref(null);
+  const parentItem = ref<MenuParent>({
+    id: 0,
+    label: '无父级菜单',
+    value: 0,
+  });
+  let selectOptions = ref<any>([]);
+
   const defaultValueRef = () => ({
     parentId: 0,
     label: '',
@@ -85,6 +118,7 @@
     openType: 1,
     auth: '',
     path: '',
+    order: '',
     hidden: false,
   });
   const formParams = ref(defaultValueRef());
@@ -94,9 +128,16 @@
     placement: 'right' as const,
   });
 
-  function openDrawer(parentId: 0) {
+  function openDrawer(parent: MenuParent) {
     state.isDrawer = true;
-    formParams.value.parentId = parentId;
+    formParams.value.parentId = parent.id;
+    parentItem.value = parent;
+    selectOptions.value = [
+      {
+        label: parent.label,
+        value: parent.id,
+      },
+    ];
   }
 
   function closeDrawer() {
@@ -108,10 +149,9 @@
       if (!errors) {
         message.success('添加成功');
         const data = formParams.value;
-        await addMenu(data);
-
         handleReset();
         closeDrawer();
+        await addMenu(data);
       } else {
         message.error('请填写完整信息');
       }
