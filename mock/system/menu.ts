@@ -14,6 +14,16 @@ const menuList = () => {
       openType: 1,
       auth: 'dashboard',
       path: '/dashboard',
+      resources: [
+        {
+          method: 'GET',
+          path: '/api/menus',
+        },
+        {
+          method: 'POST',
+          path: '/api/menu',
+        },
+      ],
       children: [
         {
           id: 2,
@@ -25,6 +35,16 @@ const menuList = () => {
           openType: 1,
           auth: 'console',
           path: '/dashboard/console',
+          resources: [
+            {
+              method: 'GET',
+              path: '/api/menus',
+            },
+            {
+              method: 'POST',
+              path: '/api/menu',
+            },
+          ],
         },
         {
           id: 3,

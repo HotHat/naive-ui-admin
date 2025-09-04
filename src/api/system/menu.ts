@@ -1,4 +1,16 @@
 import { Alova } from '@/utils/http/alova/index';
+
+export interface MenuParent {
+  id: number;
+  label: string;
+  value: number;
+}
+
+export interface Resource {
+  method: string;
+  path: string;
+}
+
 export interface ListMenu {
   id: number;
   parentId: number;
@@ -10,6 +22,7 @@ export interface ListMenu {
   auth: string;
   path: string;
   children?: ListMenu[];
+  resources?: Resource[];
 }
 
 /**

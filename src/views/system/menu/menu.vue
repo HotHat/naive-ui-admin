@@ -80,6 +80,7 @@
           <n-form
             :model="formParams"
             :rules="rules"
+            size="small"
             ref="formRef"
             label-placement="left"
             :label-width="100"
@@ -109,12 +110,73 @@
                 </n-space>
               </n-radio-group>
             </n-form-item> -->
-            <n-form-item label="菜单权限" path="auth">
-              <n-input
-                type="textarea"
-                placeholder="请输入权限，多个权限用，分割"
-                v-model:value="formParams.auth"
-              />
+            <n-form-item label="菜单权限">
+              <!-- <n-dynamic-input
+                v-model:value="formParams.resources"
+                :on-create="onCreate"
+                #="{ index }"
+              >
+                <div class="flex-box">
+                  <n-form-item :path="`resources[${index}].method`" :rule="dynamicInputRule">
+                    <n-select
+                      class="first"
+                      v-model:value="formParams.resources[index].method"
+                      :options="RespMethods"
+                    />
+                  </n-form-item>
+                  <n-form-item :path="`resources[${index}].path`" :rule="dynamicInputRule">
+                    <n-input
+                      class="middle"
+                      placeholder="请输入路径"
+                      v-model:value="formParams.resources[index].path"
+                    />
+                  </n-form-item>
+                  <n-form-item>
+                    <n-button class="last" @click="delMenuResource(index)" text>
+                      <template #icon>
+                        <n-icon><DeleteOutlined /></n-icon>
+                      </template>
+                    </n-button>
+                  </n-form-item>
+                </div>
+              </n-dynamic-input> -->
+
+              <n-flex vertical style="width: 100%">
+                <!-- <n-input
+                  type="textarea"
+                  placeholder="请输入权限，多个权限用，分割"
+                  v-model:value="formParams.auth"
+                /> -->
+                <div class="flex-box" v-for="(item, index) in formParams.resources" :key="index">
+                  <n-form-item
+                    class="first"
+                    :path="`resources[${index}].method`"
+                    :rule="dynamicInputRule"
+                  >
+                    <n-select v-model:value="item.method" :options="RespMethods" />
+                  </n-form-item>
+                  <n-form-item
+                    class="middle"
+                    :path="`resources[${index}].path`"
+                    :rule="dynamicInputRule"
+                  >
+                    <n-input placeholder="请输入路径" v-model:value="item.path" />
+                  </n-form-item>
+                  <n-form-item class="last">
+                    <n-button @click="delMenuResource(index)" text>
+                      <template #icon>
+                        <n-icon><DeleteOutlined /></n-icon>
+                      </template>
+                    </n-button>
+                  </n-form-item>
+                </div>
+                <n-button dashed @click="addMenuResource()">
+                  <template #icon>
+                    <n-icon><PlusOutlined /></n-icon>
+                  </template>
+                  添加
+                </n-button>
+              </n-flex>
             </n-form-item>
             <n-form-item label="排序" path="order">
               <n-input placeholder="请输入排序序号" v-model:value="formParams.order" />
@@ -138,17 +200,19 @@
 <script lang="ts" setup>
   import { ref, unref, reactive, onMounted, computed } from 'vue';
   import { useDialog, useMessage } from 'naive-ui';
-  import { DownOutlined, AlignLeftOutlined, SearchOutlined, FormOutlined } from '@vicons/antd';
-  import { getMenuList } from '@/api/system/menu';
+  import {
+    DownOutlined,
+    AlignLeftOutlined,
+    SearchOutlined,
+    FormOutlined,
+    PlusOutlined,
+    DeleteOutlined,
+  } from '@vicons/antd';
+  import { getMenuList, MenuParent, Resource } from '@/api/system/menu';
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
   import type { ListMenu } from '@/api/system/menu';
-
-  interface MenuParent {
-    id: number;
-    label: string;
-    value: number;
-  }
+import { pathToFileURL } from 'url';
 
   const rules = {
     label: {
@@ -191,6 +255,32 @@
 
   let expandedKeys = ref([]);
   let selectOptions = ref<any>([]);
+  const RespMethods = [
+    {
+      label: 'GET',
+      value: 'GET',
+    },
+    {
+      label: 'POST',
+      value: 'POST',
+    },
+    {
+      label: 'PUT',
+      value: 'PUT',
+    },
+    {
+      label: 'DELETE',
+      value: 'DELETE',
+    },
+    {
+      label: 'PATCH',
+      value: 'PATCH',
+    },
+    {
+      label: 'HEAD',
+      value: 'HEAD',
+    },
+  ];
 
   const treeData = ref<ListMenu[]>([]);
 
@@ -228,7 +318,22 @@
     auth: '',
     openType: 1,
     order: '',
+    resources: [] as Resource[],
   });
+
+  function onCreate() {
+    return formParams.resources;
+  }
+
+  const dynamicInputRule = {
+    trigger: 'input',
+    validator(rule: unknown, value: string) {
+      if (value.trim().length == 0) {
+        return new Error('请输入请求路径');
+      }
+      return true;
+    },
+  };
 
   function selectAddMenu(key: string) {
     drawerTitle.value = key === 'home' ? '添加顶栏菜单' : `添加子菜单：${treeItemTitle.value}`;
@@ -254,6 +359,7 @@
       treeItemKey.value = keys;
       treeItemId.value = treeItem.id;
       treeItemTitle.value = treeItem.label;
+      treeItem.resources = treeItem.resources || [];
       Object.assign(formParams, treeItem);
       isEditMenu.value = true;
       optionParentId.value = treeItem.parentId;
@@ -268,6 +374,7 @@
       treeItemTitle.value = '';
       formParams.parentId = 0;
       formParams.parentTitle = '';
+      formParams.resources = [];
     }
   }
 
@@ -351,4 +458,31 @@
   function onExpandedKeys(keys) {
     expandedKeys.value = keys;
   }
+  function addMenuResource() {
+    formParams.resources.push({
+      method: 'GET',
+      path: '',
+    });
+  }
+  function delMenuResource(index) {
+    formParams.resources.splice(index, 1);
+  }
 </script>
+
+<style scoped lang="less">
+  .flex-box {
+    display: flex;
+    .first {
+      width: 180px;
+      margin-right: 10px;
+    }
+    .middle {
+      flex-grow: 2;
+    }
+    .last {
+      width: 50px;
+      display: flex;
+      justify-content: center;
+    }
+  }
+</style>
