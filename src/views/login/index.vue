@@ -12,12 +12,12 @@
       <div class="wave wave-2"></div>
       <div class="wave wave-3"></div>
     </div>
-    <div class="view-account-container animate__animated animate__fadeInDown">
+    <div class="view-account-container animate__animated1 animate__fadeInDown1">
       <div class="view-account-top">
         <div class="view-account-top-logo">
           <img :src="websiteConfig.loginImage" alt="" />
         </div>
-        <div class="view-account-top-desc">{{ websiteConfig.loginDesc }}</div>
+        <!-- <div class="view-account-top-desc">{{ websiteConfig.loginDesc }}</div> -->
       </div>
       <div class="view-account-form">
         <h2 class="view-account-title">账号登录</h2>
@@ -25,13 +25,13 @@
         <n-form
           ref="formRef"
           label-placement="left"
-          size="large"
+          size="medium"
           :model="formInline"
           :rules="rules"
           class="login-form"
         >
           <n-form-item path="username" class="username-item">
-            <n-input 
+            <n-input
               v-model:value="formInline.username" 
               placeholder="请输入用户名"
               class="login-input"
@@ -58,6 +58,26 @@
               </template>
             </n-input>
           </n-form-item>
+          <n-form-item path="captcha">
+            <n-input
+              v-model:value="formInline.captcha"
+              showPasswordOn="click"
+              placeholder="请输入密码"
+              class="login-input"
+            >
+              <!-- <template #prefix>
+                <n-icon size="18" color="#808695">
+                  <LockClosedOutline />
+                </n-icon>
+              </template> -->
+            </n-input>
+            <n-image
+              class="captcha"
+              width="100%"
+              src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg"
+            />
+          </n-form-item>
+
           <n-form-item class="default-color remember-forgot">
             <div class="flex-between-wrapper">
               <div class="left">
@@ -69,11 +89,11 @@
             </div>
           </n-form-item>
           <n-form-item>
-            <n-button 
-              type="primary" 
-              @click="handleSubmit" 
-              size="large" 
-              :loading="loading" 
+            <n-button
+              type="primary"
+              @click="handleSubmit"
+              size="large"
+              :loading="loading"
               block
               class="login-button"
             >
@@ -147,12 +167,14 @@
   const formInline = reactive({
     username: 'admin',
     password: '123456',
+    captcha: '8888',
     isCaptcha: true,
   });
 
   const rules = {
     username: { required: true, message: '请输入用户名', trigger: 'blur' },
     password: { required: true, message: '请输入密码', trigger: 'blur' },
+    captcha: { required: true, message: '请输入验证码', trigger: 'blur' },
   };
 
   const userStore = useUserStore();
@@ -246,7 +268,7 @@
       
       &:hover {
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        transform: translateY(-5px);
+        // transform: translateY(-5px);
       }
       
       // 移除圆形装饰元素
@@ -464,9 +486,14 @@
     }
     
     .username-item, .password-item {
-      margin-bottom: 24px;
+      margin-bottom: 8px;
     }
     
+    .captcha {
+      width: 200px;
+      margin-left: 10px;
+      height: 30px;
+    }
     .other-text {
       padding-left: 5px;
     }
