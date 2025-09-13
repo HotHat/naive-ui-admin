@@ -61,7 +61,7 @@ export const Alova = createAlova({
     const token = userStore.getToken;
     // 添加 token 到请求头
     if (!method.meta?.ignoreToken && token) {
-      method.config.headers['token'] = token;
+      method.config.headers['Authorization'] = 'Bearer ' + token;
     }
     // 处理 api 请求前缀
     const isUrlStr = isUrl(method.url as string);
@@ -74,31 +74,28 @@ export const Alova = createAlova({
   },
   responded: {
     onSuccess: async (response, method) => {
-      // console.log(response);
-      // const resp = response.clone();
-      // const txt = (resp.text && (await resp.text())) || ;
-      // console.log('txt', txt);
-      let res = {
-        message: response.statusText,
-        code: response.status,
-        result: {},
-      };
+      console.log(response);
+      console.log('content-type', response.headers, response.headers.get('content-type'));
+      const contentType = response.headers.get('content-type') || '';
 
-      try {
-        res = (response.json && (await response.json())) || response.body;
-      } catch {}
+      if (contentType && !contentType.startsWith('application/json')) {
+        return response;
+      }
+
+      let res = {};
+      res = (response.json && (await response.json())) || response.body;
 
       // 是否返回原生响应头 比如：需要获取响应头时使用该属性
       if (method.meta?.isReturnNativeResponse) {
         return res;
       }
       // 请根据自身情况修改数据结构
-      const { message, code, result } = res;
+      // const { message, code, result } = res;
 
       // 不进行任何处理，直接返回
       // 用于需要直接获取 code、result、 message 这些信息时开启
       if (method.meta?.isTransformResponse === false) {
-        return res.data;
+        return res;
       }
 
       // @ts-ignore
@@ -106,10 +103,12 @@ export const Alova = createAlova({
       // @ts-ignore
       const Modal = window.$dialog;
 
+      const code = response.status;
       const LoginPath = PageEnum.BASE_LOGIN;
-      if (ResultEnum.SUCCESS === code) {
-        return result;
+      if (200 === code) {
+        return res;
       }
+
       // 需要登录 http 401 Unauthorized
       if (code === 401) {
         Modal?.warning({
@@ -124,6 +123,7 @@ export const Alova = createAlova({
           },
         });
       } else {
+        const { message } = (res as any) || '请求错误';
         // 可按需处理错误 一般情况下不是 912 错误，不一定需要弹出 message
         Message?.error(message);
         throw new Error(message);

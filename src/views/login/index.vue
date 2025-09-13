@@ -29,10 +29,11 @@
           :model="formInline"
           :rules="rules"
           class="login-form"
+          @keyup.enter="handleSubmit"
         >
           <n-form-item path="username" class="username-item">
             <n-input
-              v-model:value="formInline.username" 
+              v-model:value="formInline.username"
               placeholder="请输入用户名"
               class="login-input"
             >
@@ -61,8 +62,7 @@
           <n-form-item path="captcha">
             <n-input
               v-model:value="formInline.captcha"
-              showPasswordOn="click"
-              placeholder="请输入密码"
+              placeholder="请输入验证码"
               class="login-input"
             >
               <!-- <template #prefix>
@@ -72,9 +72,11 @@
               </template> -->
             </n-input>
             <n-image
+              @click="reloadCaptcha"
               class="captcha"
+              preview-disabled
               width="100%"
-              src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg"
+              :src="captchaInfo.url"
             />
           </n-form-item>
 
@@ -139,12 +141,19 @@
   import { useUserStore } from '@/store/modules/user';
   import { useMessage } from 'naive-ui';
   import { ResultEnum } from '@/enums/httpEnum';
-  import { PersonOutline, LockClosedOutline, LogoGithub, LogoFacebook, LogoWechat } from '@vicons/ionicons5';
+  import {
+    PersonOutline,
+    LockClosedOutline,
+    LogoGithub,
+    LogoFacebook,
+    LogoWechat,
+  } from '@vicons/ionicons5';
   import { PageEnum } from '@/enums/pageEnum';
   import { websiteConfig } from '@/config/website.config';
-  
+  import { getCaptchaId, getCaptcha } from '@/api/login';
+
   // 添加页面加载动画效果
-  onMounted(() => {
+  onMounted(async () => {
     // 聚焦用户名输入框
     setTimeout(() => {
       const usernameInput = document.querySelector('input[placeholder="请输入用户名"]');
@@ -152,11 +161,27 @@
         (usernameInput as HTMLElement).focus();
       }
     }, 500);
+
+    captchaInfo.value.id = await getCaptchaId();
+    reloadCaptcha();
   });
   interface FormState {
     username: string;
     password: string;
+    captcha: string;
   }
+
+  interface CaptchaState {
+    id: string;
+    url: Blob | string;
+    init: boolean;
+  }
+
+  let captchaInfo = ref<CaptchaState>({
+    id: '',
+    url: '',
+    init: false,
+  });
 
   const formRef = ref();
   const message = useMessage();
@@ -182,21 +207,32 @@
   const router = useRouter();
   const route = useRoute();
 
+  async function reloadCaptcha() {
+    if (captchaInfo.value.id) {
+      if (captchaInfo.value.init) {
+        captchaInfo.value.url = await getCaptcha(captchaInfo.value.id, true);
+      } else {
+        captchaInfo.value.url = await getCaptcha(captchaInfo.value.id);
+        captchaInfo.value.init = true;
+      }
+    }
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault();
     formRef.value.validate(async (errors) => {
       if (!errors) {
-        const { username, password } = formInline;
+        const { username, password, captcha } = formInline;
         message.loading('登录中...');
         loading.value = true;
 
-        const params: FormState = {
-          username,
-          password,
-        };
-
         try {
-          const { code, message: msg } = await userStore.login(params);
+          const { code, message: msg } = await userStore.login({
+            username: username,
+            password: password,
+            captcha_id: captchaInfo.value.id,
+            captcha_code: captcha,
+          });
           message.destroyAll();
           if (code == ResultEnum.SUCCESS) {
             const toPath = decodeURIComponent((route.query?.redirect || '/') as string);
@@ -226,7 +262,7 @@
     background-color: #f0f2f5;
     background: linear-gradient(140deg, #e8f1fa, #c2d9ec, #a1c3e0, #80aed3);
     position: relative;
-    
+
     &::before {
       content: '';
       position: absolute;
@@ -238,7 +274,7 @@
       opacity: 0.6;
       z-index: 0;
     }
-    
+
     &::after {
       content: '';
       position: absolute;
@@ -265,14 +301,14 @@
       background: rgba(255, 255, 255, 0.95);
       border: 1px solid rgba(255, 255, 255, 0.18);
       transition: all 0.3s ease;
-      
+
       &:hover {
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         // transform: translateY(-5px);
       }
-      
+
       // 移除圆形装饰元素
-      
+
       @keyframes float {
         0% {
           transform: translateY(0px);
@@ -293,7 +329,7 @@
       color: #333;
       margin-bottom: 8px;
       position: relative;
-      
+
       &::after {
         content: '';
         position: absolute;
@@ -306,7 +342,7 @@
         border-radius: 2px;
       }
     }
-    
+
     .login-welcome {
       text-align: center;
       font-size: 14px;
@@ -323,7 +359,7 @@
         margin-bottom: 8px;
         display: flex;
         justify-content: center;
-        
+
         img {
           height: 60px;
         }
@@ -357,12 +393,12 @@
       transition: all 0.3s;
       position: relative;
       overflow: hidden;
-      
+
       &:hover {
         transform: translateY(-1px);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
       }
-      
+
       &::after {
         content: '';
         position: absolute;
@@ -376,11 +412,11 @@
         transform: scale(1, 1) translate(-50%);
         transform-origin: 50% 50%;
       }
-      
+
       &:focus:not(:active)::after {
         animation: ripple 1s ease-out;
       }
-      
+
       @keyframes ripple {
         0% {
           transform: scale(0, 0);
@@ -396,26 +432,26 @@
         }
       }
     }
-    
+
     .remember-forgot {
       margin-bottom: 5px;
-      
+
       .flex-between-wrapper {
         display: flex;
         justify-content: space-between;
         align-items: center;
         width: 100%;
       }
-      
+
       .right {
         text-align: right;
       }
     }
-    
+
     .forgot-link {
       color: #606266;
       transition: all 0.2s;
-      
+
       &:hover {
         color: #2d8cf0;
       }
@@ -436,11 +472,11 @@
       margin-right: 12px;
       transition: all 0.3s;
       background-color: rgba(144, 147, 153, 0.1);
-      
+
       &:hover {
         background-color: rgba(45, 140, 240, 0.2);
         transform: scale(1.1);
-        
+
         :deep(svg) {
           color: #2d8cf0 !important;
         }
@@ -450,54 +486,55 @@
     .register-link {
       color: #2d8cf0;
       transition: all 0.3s;
-      
+
       &:hover {
         color: #57a3f3;
         text-decoration: underline;
       }
     }
-    
+
     .login-form {
       :deep(.n-form-item-feedback-wrapper) {
         min-height: 18px;
       }
-      
+
       :deep(.n-input) {
         border-radius: 4px;
       }
-      
+
       padding: 0;
     }
-    
+
     .login-input {
       :deep(.n-input__input-el) {
         padding-left: 5px;
       }
-      
+
       :deep(.n-input-wrapper) {
         transition: all 0.3s ease;
       }
-      
+
       &:hover {
         :deep(.n-input-wrapper) {
           box-shadow: 0 0 0 1px rgba(45, 140, 240, 0.2);
         }
       }
     }
-    
-    .username-item, .password-item {
+
+    .username-item,
+    .password-item {
       margin-bottom: 8px;
     }
-    
+
     .captcha {
-      width: 200px;
+      width: 150px;
       margin-left: 10px;
       height: 30px;
     }
     .other-text {
       padding-left: 5px;
     }
-    
+
     .other-item {
       margin-bottom: 0;
     }
@@ -505,13 +542,18 @@
 
   @media (min-width: 768px) {
     .view-account {
-      background-image: url('../../assets/images/login.svg'), 
-                        radial-gradient(circle at 10% 20%, rgba(100, 149, 237, 0.25) 0%, rgba(65, 105, 225, 0.2) 40%, rgba(30, 144, 255, 0.1) 90%);
+      background-image: url('../../assets/images/login.svg'),
+        radial-gradient(
+          circle at 10% 20%,
+          rgba(100, 149, 237, 0.25) 0%,
+          rgba(65, 105, 225, 0.2) 40%,
+          rgba(30, 144, 255, 0.1) 90%
+        );
       background-repeat: no-repeat;
       background-position: 50%;
       background-size: cover;
       position: relative;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -523,7 +565,7 @@
         backdrop-filter: blur(10px);
         z-index: 0;
       }
-      
+
       &::after {
         content: '';
         position: absolute;
@@ -536,7 +578,7 @@
         z-index: 0;
         pointer-events: none;
       }
-      
+
       &-container {
         margin-top: 15vh;
         z-index: 1;
@@ -550,7 +592,7 @@
       margin-top: 5vh;
     }
   }
-  
+
   .view-account-background {
     position: absolute;
     width: 100%;
@@ -560,11 +602,11 @@
     overflow: hidden;
     pointer-events: none;
     z-index: 0;
-    
+
     .line {
       position: absolute;
       background: linear-gradient(90deg, rgba(45, 140, 240, 0.2), rgba(0, 129, 255, 0.1));
-      
+
       &-1 {
         width: 300px;
         height: 2px;
@@ -573,7 +615,7 @@
         transform: rotate(-30deg);
         animation: pulse 8s ease-in-out infinite;
       }
-      
+
       &-2 {
         width: 200px;
         height: 2px;
@@ -582,7 +624,7 @@
         transform: rotate(45deg);
         animation: pulse 6s ease-in-out infinite 1s;
       }
-      
+
       &-3 {
         width: 150px;
         height: 2px;
@@ -592,10 +634,10 @@
         animation: pulse 7s ease-in-out infinite 2s;
       }
     }
-    
+
     .square {
       position: absolute;
-      
+
       &-1 {
         width: 80px;
         height: 80px;
@@ -605,7 +647,7 @@
         transform: rotate(30deg);
         animation: rotate 15s linear infinite;
       }
-      
+
       &-2 {
         width: 60px;
         height: 60px;
@@ -616,7 +658,7 @@
         animation: rotate 12s linear infinite reverse;
       }
     }
-    
+
     .triangle {
       position: absolute;
       bottom: 30%;
@@ -628,7 +670,7 @@
       border-bottom: 80px solid rgba(45, 140, 240, 0.08);
       animation: float 10s ease-in-out infinite;
     }
-    
+
     @keyframes pulse {
       0% {
         opacity: 0.3;
@@ -640,7 +682,7 @@
         opacity: 0.3;
       }
     }
-    
+
     @keyframes rotate {
       0% {
         transform: rotate(0deg);
@@ -649,12 +691,12 @@
         transform: rotate(360deg);
       }
     }
-    
+
     .wave {
       position: absolute;
       opacity: 0.3;
       transform-origin: bottom left;
-      
+
       &-1 {
         bottom: 0;
         left: 0;
@@ -665,7 +707,7 @@
         animation: wave-left-to-right 15s ease-in-out infinite;
         transform: rotate(-2deg);
       }
-      
+
       &-2 {
         bottom: 0;
         left: 0;
@@ -677,7 +719,7 @@
         animation-delay: -5s;
         transform: rotate(-1deg);
       }
-      
+
       &-3 {
         bottom: 0;
         left: 0;
@@ -689,7 +731,7 @@
         animation-delay: -2s;
       }
     }
-    
+
     @keyframes wave-left-to-right {
       0% {
         background-position-x: 0;
@@ -704,7 +746,7 @@
         background-position-y: 0%;
       }
     }
-    
+
     @keyframes float {
       0% {
         transform: translateY(0);
