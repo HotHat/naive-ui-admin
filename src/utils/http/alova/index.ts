@@ -10,6 +10,7 @@ import { useGlobSetting, useLocalSetting } from '@/hooks/setting';
 import { PageEnum } from '@/enums/pageEnum';
 import { ResultEnum } from '@/enums/httpEnum';
 import { isUrl } from '@/utils';
+import { E } from '@faker-js/faker/dist/airline-CLphikKp';
 
 const { apiUrl, urlPrefix } = useGlobSetting();
 
@@ -74,21 +75,22 @@ export const Alova = createAlova({
   },
   responded: {
     onSuccess: async (response, method) => {
-      console.log(response);
-      console.log('content-type', response.headers, response.headers.get('content-type'));
-      const contentType = response.headers.get('content-type') || '';
+      // console.log(response);
+      // console.log('content-type', response.headers, response.headers.get('content-type'));
+      // const contentType = response.headers.get('content-type') || '';
 
-      if (contentType && !contentType.startsWith('application/json')) {
+      // if (contentType && !contentType.startsWith('application/json')) {
+      // return response;
+      // }
+
+      // 是否返回原生响应头 比如：需要获取响应头时使用该属性
+      if (method.meta?.isReturnNativeResponse) {
         return response;
       }
 
       let res = {};
       res = (response.json && (await response.json())) || response.body;
 
-      // 是否返回原生响应头 比如：需要获取响应头时使用该属性
-      if (method.meta?.isReturnNativeResponse) {
-        return res;
-      }
       // 请根据自身情况修改数据结构
       // const { message, code, result } = res;
 
@@ -125,8 +127,9 @@ export const Alova = createAlova({
       } else {
         const { message } = (res as any) || '请求错误';
         // 可按需处理错误 一般情况下不是 912 错误，不一定需要弹出 message
-        Message?.error(message);
-        throw new Error(message);
+        const errMessage = message || response.statusText;
+        Message?.error(errMessage);
+        throw new Error(errMessage);
       }
     },
   },

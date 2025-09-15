@@ -3,49 +3,34 @@ import { Alova } from '@/utils/http/alova/index';
 import { result } from 'lodash';
 import { defineMock } from '@alova/mock';
 import Mock from 'mockjs';
+import { userInfo } from 'os';
 
 const Random = Mock.Random;
+
+export interface Login {
+  access_token: string;
+  expires_at: number;
+}
 
 /**
  * @description: 获取用户信息
  */
 export async function getUserInfo() {
-  const resp: any = await Alova.Get<InResult>('/api/v1/user', {
+  const resp: any = await Alova.Get<InResult>('/v1/user', {
     meta: {
-      isReturnNativeResponse: true,
+      // isReturnNativeResponse: true,
     },
   });
   console.log('getUserInfo', resp);
   return {
     code: resp.success ? 200 : 400,
     result: {
-      userId: resp.data.id,
-      username: resp.data.username,
-      realName: resp.data.name,
+      userId: resp.id,
+      username: resp.username,
+      realName: resp.name,
       avatar: Random.image(),
       desc: 'manager',
-      permissions: [
-        {
-          label: '主控台',
-          value: 'dashboard_console',
-        },
-        {
-          label: '监控页',
-          value: 'dashboard_monitor',
-        },
-        {
-          label: '工作台',
-          value: 'dashboard_workplace',
-        },
-        {
-          label: '基础列表',
-          value: 'basic_list',
-        },
-        {
-          label: '基础列表删除',
-          value: 'basic_list_delete',
-        },
-      ],
+      permissions: resp.permissions,
     },
   } as any;
 }
@@ -54,15 +39,16 @@ export async function getUserInfo() {
  * @description: 用户登录
  */
 export async function login(params) {
-  const resp: any = await Alova.Post<InResult>('/api/v1/login', params, {
-    meta: {
-      isReturnNativeResponse: true,
-    },
-  });
+  const resp = await Alova.Post<Login>('/v1/login', params);
   return {
-    code: resp.success ? 200 : 400,
-    result: { token: resp.data.access_token },
-  } as any;
+    code: 200,
+    result: {
+      token: resp.access_token,
+      username: '',
+      email: '',
+    },
+    type: 'success',
+  };
 }
 
 /**
