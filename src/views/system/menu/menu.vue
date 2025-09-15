@@ -208,11 +208,11 @@
     PlusOutlined,
     DeleteOutlined,
   } from '@vicons/antd';
-  import { getMenuList, MenuParent, Resource } from '@/api/system/menu';
+  import { getMenuList, MenuParent, Resource, MenuItem } from '@/api/system/menu';
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
   import type { ListMenu } from '@/api/system/menu';
-import { pathToFileURL } from 'url';
+  import { pathToFileURL } from 'url';
 
   const rules = {
     label: {
@@ -423,8 +423,8 @@ import { pathToFileURL } from 'url';
       // Add the current node to the flat array
       flatNodes.push({
         id: node.id,
-        label: node.label,
-        key: node.key,
+        label: node.labl,
+        key: node.id,
         type: node.type,
         value: node.id,
       });
@@ -438,10 +438,39 @@ import { pathToFileURL } from 'url';
     return flatNodes;
   }
 
+  function travelTree(nodes: any[]): any[] {
+    let flatNodes: any[] = [];
+
+    for (const node of nodes) {
+      // Add the current node to the flat array
+      let item = {
+        id: node.id,
+        label: node.name,
+        key: node.id,
+        type: node.type,
+        value: node.id,
+        path: node.path,
+        children: null as any,
+        resources: node.resources,
+      };
+
+      // Recursively flatten children if they exist
+      if (node.children && node.children.length > 0) {
+        item.children = travelTree(node.children);
+      }
+      flatNodes.push(item);
+    }
+
+    return flatNodes;
+  }
+
   onMounted(async () => {
-    const treeMenuList = await getMenuList();
-    const keys = treeMenuList.list.map((item) => item.key);
-    const flat = flattenTree(treeMenuList['list']);
+    const { data } = await getMenuList();
+    const treeMenuList = travelTree(data);
+    console.log('menu data', data);
+    console.log('menu list', treeMenuList);
+    const flat = flattenTree(treeMenuList);
+    const keys = flat.map((item) => item.key);
     flat.unshift({
       id: 0,
       label: '无父级菜单',
@@ -451,7 +480,7 @@ import { pathToFileURL } from 'url';
     console.log(flat);
     console.log(selectOptions.value);
     Object.assign(formParams, keys);
-    treeData.value = treeMenuList.list;
+    treeData.value = treeMenuList;
     loading.value = false;
   });
 

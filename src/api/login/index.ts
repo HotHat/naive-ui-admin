@@ -8,7 +8,9 @@ export interface Captcha {
  * @description: 获取验证码id
  */
 export async function getCaptchaId() {
-  return Alova.Get<Captcha>('/v1/captcha/id');
+  return Alova.Get<Captcha>('/v1/captcha/id', {
+    cacheFor: null,
+  });
   // console.log('getCaptchaId', data.captcha_id);
   // return respond;
 }

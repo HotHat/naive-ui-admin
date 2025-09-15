@@ -25,6 +25,17 @@ export interface ListMenu {
   resources?: Resource[];
 }
 
+export interface MenuItem {
+  id: number;
+  parent_id: number;
+  name: string;
+  key: string;
+  type: string;
+  path: string;
+  children?: MenuItem[];
+  resources?: Resource[];
+}
+
 /**
  * @description: 根据用户id获取用户菜单
  */
@@ -37,7 +48,7 @@ export function adminMenus() {
  * @param params
  */
 export function getMenuList(params?) {
-  return Alova.Get<{ list: ListMenu[] }>('/menu/list', {
+  return Alova.Get<{ data: MenuItem[] }>('/v1/menus', {
     params,
   });
 }

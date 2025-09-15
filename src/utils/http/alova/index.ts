@@ -10,7 +10,6 @@ import { useGlobSetting, useLocalSetting } from '@/hooks/setting';
 import { PageEnum } from '@/enums/pageEnum';
 import { ResultEnum } from '@/enums/httpEnum';
 import { isUrl } from '@/utils';
-import { E } from '@faker-js/faker/dist/airline-CLphikKp';
 
 const { apiUrl, urlPrefix } = useGlobSetting();
 

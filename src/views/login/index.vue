@@ -150,7 +150,7 @@
   } from '@vicons/ionicons5';
   import { PageEnum } from '@/enums/pageEnum';
   import { websiteConfig } from '@/config/website.config';
-  import { getCaptchaId, getCaptcha } from '@/api/login';
+  import { getCaptchaId, getCaptcha, Captcha } from '@/api/login';
 
   // 添加页面加载动画效果
   onMounted(async () => {
@@ -162,9 +162,9 @@
       }
     }, 500);
 
-    captchaInfo.value.id = await getCaptchaId();
-    reloadCaptcha();
+    await initCaptcha();
   });
+
   interface FormState {
     username: string;
     password: string;
@@ -207,7 +207,15 @@
   const router = useRouter();
   const route = useRoute();
 
+  async function initCaptcha() {
+    const cap = await getCaptchaId();
+    console.log('init captcha', cap);
+    captchaInfo.value.id = cap.captcha_id;
+    await reloadCaptcha();
+  }
+
   async function reloadCaptcha() {
+    console.log('reload captcha', captchaInfo.value);
     if (captchaInfo.value.id) {
       if (captchaInfo.value.init) {
         captchaInfo.value.url = await getCaptcha(captchaInfo.value.id, true);
@@ -243,6 +251,8 @@
           } else {
             message.info(msg || '登录失败');
           }
+        } catch (error) {
+          await initCaptcha();
         } finally {
           loading.value = false;
         }
