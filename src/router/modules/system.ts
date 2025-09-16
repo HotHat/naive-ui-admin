@@ -19,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
         path: 'menu',
         name: 'system_menu',
         meta: {
-          title: '菜单权限',
+          title: '菜单管理',
         },
         component: () => import('@/views/system/menu/menu.vue'),
       },
@@ -27,9 +27,17 @@ const routes: Array<RouteRecordRaw> = [
         path: 'role',
         name: 'system_role',
         meta: {
-          title: '角色权限',
+          title: '角色管理',
         },
         component: () => import('@/views/system/role/role.vue'),
+      },
+      {
+        path: 'user',
+        name: 'system_user',
+        meta: {
+          title: '用户管理',
+        },
+        component: () => import('@/views/system/user/user.vue'),
       },
     ],
   },

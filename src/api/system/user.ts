@@ -66,3 +66,10 @@ export function logout(params) {
     params,
   });
 }
+
+/**
+ * @description: 用户列表
+ */
+export function getUserList(params) {
+  return Alova.Get<{ data: any[]; page: any }>('/v1/users', params);
+}
