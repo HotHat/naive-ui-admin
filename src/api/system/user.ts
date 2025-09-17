@@ -73,3 +73,10 @@ export function logout(params) {
 export function getUserList(params) {
   return Alova.Get<{ data: any[]; page: any }>('/v1/users', params);
 }
+
+/**
+ * @description: 用户列表
+ */
+export function addUser(params) {
+  return Alova.Post('/v1/users', params);
+}

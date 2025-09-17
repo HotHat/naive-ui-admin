@@ -10,31 +10,83 @@
   import { nextTick } from 'vue';
   import { FormSchema, useForm } from '@/components/Form';
   import { basicModal, useModal } from '@/components/Modal';
+  import { SelectOption } from 'naive-ui';
+
+  interface Props {
+    roleOption: SelectOption[];
+  }
+
+  const props = defineProps<Props>();
 
   const schemas: FormSchema[] = [
     {
+      field: 'username',
+      component: 'NInput',
+      label: '用户名称',
+      componentProps: {
+        placeholder: '请输入用户名称',
+      },
+      rules: [{ required: true, message: '请输入用户名称', trigger: ['blur'] }],
+    },
+    {
+      field: 'roles',
+      component: 'NSelect',
+      label: '角色',
+      defaultValue: [],
+      componentProps: {
+        placeholder: '请输入角色',
+        multiple: true,
+        options: props.roleOption,
+      },
+      rules: [{ type: 'array', required: true, message: '请输入角色', trigger: ['blur'] }],
+    },
+    {
       field: 'name',
       component: 'NInput',
-      label: '角色名称',
+      label: '姓名',
       componentProps: {
-        placeholder: '请输入角色名称',
+        placeholder: '请输入姓名',
       },
-      rules: [{ required: true, message: '请输入角色名称', trigger: ['blur'] }],
+      rules: [{ required: true, message: '请输入姓名', trigger: ['blur'] }],
     },
     {
-      field: 'explain',
+      field: 'phone',
       component: 'NInput',
-      label: '角色说明',
+      label: '手机号码',
+      componentProps: {
+        placeholder: '请输入手机号码',
+      },
+      rules: [{ required: true, message: '请输入手机号码', trigger: ['blur'] }],
+    },
+    {
+      field: 'email',
+      component: 'NInput',
+      label: '邮箱',
+      defaultValue: '',
+      componentProps: {
+        placeholder: '请输入邮箱姓名',
+      },
+      rules: [{ required: false, message: '请输入邮箱', trigger: ['blur'] }],
+    },
+    {
+      field: 'remark',
+      component: 'NInput',
+      label: '备注说明',
+      defaultValue: '',
       componentProps: {
         type: 'textarea',
-        placeholder: '请输入角色说明',
+        placeholder: '请输入用户备注',
       },
     },
     {
-      field: 'isDefault',
+      field: 'status',
       component: 'NSwitch',
-      label: '默认角色',
-      componentProps: {},
+      label: '启用',
+      componentProps: {
+        // checked: true,
+        checkedValue: 1,
+        uncheckValue: 0,
+      },
     },
   ];
 

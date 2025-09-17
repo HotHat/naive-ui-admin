@@ -18,18 +18,22 @@ export const columns = [
     title: '所属角色',
     key: 'roles',
     render(row) {
-      return h(NSpace, {
-        default: () =>
-          row['roles'].map((item) =>
-            h(
-              NTag,
-              {},
-              {
-                default: () => item['role_name'],
-              }
-            )
-          ),
-      });
+      return h(
+        NSpace,
+        {},
+        {
+          default: () =>
+            row['roles'].map((item) =>
+              h(
+                NTag,
+                {},
+                {
+                  default: () => item['name'],
+                }
+              )
+            ),
+        }
+      );
     },
   },
   {
@@ -39,6 +43,25 @@ export const columns = [
   {
     title: '状态',
     key: 'status',
+    render(row) {
+      if (row.status === 1) {
+        return h(
+          NTag,
+          {},
+          {
+            default: () => '正常',
+          }
+        );
+      } else {
+        return h(
+          NTag,
+          { type: 'warning' },
+          {
+            default: () => '锁定',
+          }
+        );
+      }
+    },
   },
   {
     title: '说明',

@@ -1,7 +1,13 @@
 <template>
   <div>
     <div class="n-layout-page-header">
-      <n-card :bordered="false" title="角色管理" />
+      <n-card :bordered="false" title="用户管理">
+        <BasicForm @register="register" @submit="handleSubmit" @reset="handleReset">
+          <template #statusSlot="{ model, field }">
+            <n-input v-model:value="model[field]" />
+          </template>
+        </BasicForm>
+      </n-card>
     </div>
     <n-card :bordered="false" class="mt-4 proCard">
       <BasicTable
@@ -13,7 +19,7 @@
         @update:checked-row-keys="onCheckedRow"
       >
         <template #tableTitle>
-          <n-button type="primary" @click="addRole">
+          <n-button type="primary" @click="addUser">
             <template #icon>
               <n-icon>
                 <PlusOutlined />
@@ -28,51 +34,29 @@
         </template>
       </BasicTable>
     </n-card>
-
-    <n-modal v-model:show="showModal" :show-icon="false" preset="dialog" :title="editRoleTitle">
-      <div class="py-3 menu-list">
-        <n-tree
-          block-line
-          cascade
-          checkable
-          :virtual-scroll="true"
-          :data="treeData"
-          :expandedKeys="expandedKeys"
-          :checked-keys="checkedKeys"
-          style="max-height: 950px; overflow: hidden"
-          @update:checked-keys="checkedTree"
-          @update:expanded-keys="onExpandedKeys"
-        />
-      </div>
-      <template #action>
-        <n-space>
-          <n-button type="info" ghost icon-placement="left" @click="packHandle">
-            全部{{ expandedKeys.length ? '收起' : '展开' }}
-          </n-button>
-
-          <n-button type="info" ghost icon-placement="left" @click="checkedAllHandle">
-            全部{{ checkedAll ? '取消' : '选择' }}
-          </n-button>
-          <n-button type="primary" :loading="formBtnLoading" @click="confirmForm">提交</n-button>
-        </n-space>
-      </template>
-    </n-modal>
-    <CreateModal ref="createModalRef" :key="updateRole" :roleOption="roleOptions" />
-    <EditModal ref="editModalRef" />
+    <CreateModal
+      ref="createModalRef"
+      :key="updateRole"
+      :roleOption="roleOptions"
+      @add-user="reloadTable"
+    />
+    <EditModal ref="editModalRef" :key="updateRole" :roleOption="roleOptions" />
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref, unref, h, onMounted } from 'vue';
+  import { reactive, ref, unref, h, onMounted, nextTick } from 'vue';
   import { useMessage } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
+  import { BasicForm, useForm } from '@/components/Form/index';
   import { columns } from './columns';
+  import { formSchemas } from './FormSchemas';
   import { PlusOutlined, DeleteOutlined } from '@vicons/antd';
   import { getTreeAll } from '@/utils';
   import CreateModal from './CreateModal.vue';
   import EditModal from './EditModal.vue';
   import { getUserList } from '@/api/system/user';
-  import { getRoleList } from '@/api/system/role';
+  import { getAllRoles } from '@/api/system/role';
   import { SelectOption } from 'naive-ui';
 
   const message = useMessage();
@@ -81,14 +65,13 @@
   const editModalRef = ref();
   const showModal = ref(false);
   const formBtnLoading = ref(false);
-  const checkedAll = ref(false);
-  const editRoleTitle = ref('');
 
   const params = reactive({
     name: 'NaiveAdmin',
   });
 
   const roleOptions = ref<SelectOption[]>([]);
+
   const updateRole = ref(0);
 
   const actionColumn = reactive({
@@ -130,18 +113,20 @@
       ...unref(params),
       ...res,
     };
+    console.log('loadDataTable', _params);
+
     // dataRef.value = data.data
-    const { data } = await getUserList(_params);
+    const { data, page } = await getUserList(_params);
     return {
-      page: Number(1),
-      pageSize: Number(15),
-      pageCount: 100,
-      itemCount: Number(data.length),
+      page: page.current,
+      pageSize: page.pageSize,
+      pageCount: Math.floor(page.total / page.pageSize),
+      itemCount: page.total,
       list: data,
     };
   };
 
-  function addRole() {
+  function addUser() {
     createModalRef.value.openModal();
   }
 
@@ -163,11 +148,22 @@
       formBtnLoading.value = false;
     }, 200);
   }
+  function isNumberArray(value: any): value is number[] {
+    return (
+      Array.isArray(value) && // Check if the value is an array
+      value.every((item) => typeof item === 'number') // Check if every item in the array is a number
+    );
+  }
 
   function handleEdit(record: Recordable) {
     console.log('点击了编辑', record);
     // router.push({ name: 'basic-info', params: { id: record.id } });
-    editModalRef.value.showModal(record);
+    if (isNumberArray(record.roles)) {
+      editModalRef.value.showModal(record);
+    } else {
+      record.roles = record.roles.map((it) => it.id);
+      editModalRef.value.showModal(record);
+    }
   }
 
   function handleDelete(record: Recordable) {
@@ -176,8 +172,8 @@
   }
 
   onMounted(async () => {
-    const roleList = await getRoleList({});
-    roleOptions.value = roleList.data.map((item) => {
+    const roleList = await getAllRoles();
+    roleOptions.value = roleList.map((item) => {
       return {
         label: item.name,
         value: item.id,
@@ -187,6 +183,22 @@
     updateRole.value = updateRole.value + 1;
     // treeData.value = treeMenuList?.data;
   });
+
+  // form
+  const [register, { getFieldsValue }] = useForm({
+    gridProps: { cols: '1 s:1 m:3 l:3 xl:6 2xl:6', xGap: '12' },
+    labelWidth: 80,
+    schemas: formSchemas,
+  });
+
+  function handleSubmit(values: Recordable) {
+    console.log(values);
+    reloadTable();
+  }
+
+  function handleReset(values: Recordable) {
+    console.log(values);
+  }
 </script>
 
 <style lang="less" scoped></style>

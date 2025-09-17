@@ -10,14 +10,18 @@
   import { FormSchema, useForm } from '@/components/Form';
   import { basicModal, useModal } from '@/components/Modal';
   import { SelectOption } from 'naive-ui';
-  import { watch, ref } from 'vue';
+  import { ref, nextTick } from 'vue';
+  import { addUser } from '@/api/system/user';
 
   interface Props {
     roleOption: SelectOption[];
   }
 
+  const emit = defineEmits(['add-user', 'register']);
+
   const props = defineProps<Props>();
 
+  console.log('CreateModal', props);
   const modalRef = ref(null);
 
   const schemas: FormSchema[] = [
@@ -93,15 +97,17 @@
       field: 'status',
       component: 'NSwitch',
       label: '启用',
-      defaultValue: true,
+      defaultValue: 1,
       componentProps: {
         // checked: true,
-        defaultValue: true,
+        defaultValue: 1,
+        checkedValue: 1,
+        uncheckedValue: 0,
       },
     },
   ];
 
-  const [registerForm, { submit, setFieldsValue, getFieldsValue }] = useForm({
+  let [registerForm, { submit, setFieldsValue, getFieldsValue }] = useForm({
     gridProps: { cols: 1 },
     collapsedRows: 3,
     labelWidth: 80,
@@ -119,8 +125,11 @@
   async function okModal() {
     const formRes = await submit();
     if (formRes) {
-      closeModal();
       console.log('formRes', formRes);
+      await addUser(formRes);
+      emit('add-user');
+      nextTick();
+      closeModal();
     } else {
       setSubLoading(false);
     }
