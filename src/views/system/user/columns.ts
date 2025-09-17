@@ -1,5 +1,6 @@
 import { h } from 'vue';
 import { NTag, NSpace } from 'naive-ui';
+import { FormSchema } from '@/components/Form';
 
 export const columns = [
   {
@@ -76,3 +77,95 @@ export const columns = [
     key: 'updated_at',
   },
 ];
+
+export function getSchemas(roleOption, isAdd = true): FormSchema[] {
+  const first: FormSchema[] = [
+    {
+      field: 'username',
+      component: 'NInput',
+      label: '用户名称',
+      componentProps: {
+        placeholder: '请输入用户名称',
+      },
+      rules: [{ required: true, message: '请输入用户名称', trigger: ['blur'] }],
+    },
+  ];
+
+  if (isAdd) {
+    first.push({
+      field: 'password',
+      component: 'NInput',
+      label: '密码',
+      componentProps: {
+        placeholder: '请输入密码',
+      },
+      rules: [{ required: true, message: '请输入密码', trigger: ['blur'] }],
+    });
+  }
+
+  return [
+    ...first,
+    {
+      field: 'roles',
+      component: 'NSelect',
+      label: '角色',
+      defaultValue: [],
+      componentProps: {
+        placeholder: '请输入角色',
+        multiple: true,
+        options: roleOption,
+      },
+      rules: [{ type: 'array', required: true, message: '请输入角色', trigger: ['blur'] }],
+    },
+    {
+      field: 'name',
+      component: 'NInput',
+      label: '姓名',
+      componentProps: {
+        placeholder: '请输入姓名',
+      },
+      rules: [{ required: true, message: '请输入姓名', trigger: ['blur'] }],
+    },
+    {
+      field: 'phone',
+      component: 'NInput',
+      label: '手机号码',
+      componentProps: {
+        placeholder: '请输入手机号码',
+      },
+      rules: [{ required: true, message: '请输入手机号码', trigger: ['blur'] }],
+    },
+    {
+      field: 'email',
+      component: 'NInput',
+      label: '邮箱',
+      defaultValue: '',
+      componentProps: {
+        placeholder: '请输入邮箱姓名',
+      },
+      rules: [{ required: false, message: '请输入邮箱', trigger: ['blur'] }],
+    },
+    {
+      field: 'remark',
+      component: 'NInput',
+      label: '备注说明',
+      defaultValue: '',
+      componentProps: {
+        type: 'textarea',
+        placeholder: '请输入用户备注',
+      },
+    },
+    {
+      field: 'status',
+      component: 'NSwitch',
+      label: '启用',
+      defaultValue: 1,
+      componentProps: {
+        // checked: true,
+        defaultValue: 1,
+        checkedValue: 1,
+        uncheckedValue: 0,
+      },
+    },
+  ];
+}

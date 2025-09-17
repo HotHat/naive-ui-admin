@@ -34,13 +34,8 @@
         </template>
       </BasicTable>
     </n-card>
-    <CreateModal
-      ref="createModalRef"
-      :key="updateRole"
-      :roleOption="roleOptions"
-      @add-user="reloadTable"
-    />
-    <EditModal ref="editModalRef" :key="updateRole" :roleOption="roleOptions" />
+    <CreateModal ref="createModalRef" :roleOption="roleOptions" @add-user="reloadTable" />
+    <EditModal ref="editModalRef" :roleOption="roleOptions" />
   </div>
 </template>
 
@@ -172,15 +167,19 @@
   }
 
   onMounted(async () => {
+    console.log('user modal on mounted');
     const roleList = await getAllRoles();
-    roleOptions.value = roleList.map((item) => {
-      return {
-        label: item.name,
-        value: item.id,
-      };
+    nextTick(() => {
+      roleOptions.value = roleList.map((item) => {
+        return {
+          label: item.name,
+          value: item.id,
+        };
+      });
     });
     console.log('role list', roleOptions.value);
-    updateRole.value = updateRole.value + 1;
+    // updateRole.value = updateRole.value + 1;
+    // await nextTick();
     // treeData.value = treeMenuList?.data;
   });
 
