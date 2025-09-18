@@ -17,7 +17,10 @@
     roleOption: SelectOption[];
   }
 
+  const emit = defineEmits(['submit', 'register']);
+
   const props = defineProps<Props>();
+  let recordId = 0;
 
   let [registerForm, { submit, setFieldsValue }] = useForm({});
 
@@ -28,6 +31,7 @@
 
   function showModal(record: any) {
     openModal();
+    recordId = record.id;
     nextTick(() => {
       record && setFieldsValue({ ...record });
     });
@@ -36,8 +40,9 @@
   async function okModal() {
     const formRes = await submit();
     if (formRes) {
+      console.log('editModal formRes', formRes);
+      emit('submit', recordId, formRes);
       closeModal();
-      console.log('formRes', formRes);
     } else {
       setSubLoading(false);
     }

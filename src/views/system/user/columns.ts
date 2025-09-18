@@ -105,6 +105,30 @@ export function getSchemas(roleOption, isAdd = true): FormSchema[] {
     });
   }
 
+  let status: FormSchema;
+  if (isAdd) {
+    status = {
+      field: 'status',
+      component: 'NSwitch',
+      label: '启用',
+      defaultValue: 1,
+      componentProps: {
+        checkedValue: 1,
+        uncheckedValue: 0,
+      },
+    };
+  } else {
+    status = {
+      field: 'status',
+      component: 'NSwitch',
+      label: '启用',
+      componentProps: {
+        checkedValue: 1,
+        uncheckedValue: 0,
+      },
+    };
+  }
+
   return [
     ...first,
     {
@@ -157,17 +181,6 @@ export function getSchemas(roleOption, isAdd = true): FormSchema[] {
         placeholder: '请输入用户备注',
       },
     },
-    {
-      field: 'status',
-      component: 'NSwitch',
-      label: '启用',
-      defaultValue: 1,
-      componentProps: {
-        // checked: true,
-        defaultValue: 1,
-        checkedValue: 1,
-        uncheckedValue: 0,
-      },
-    },
+    status,
   ];
 }

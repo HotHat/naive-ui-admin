@@ -35,13 +35,13 @@
       </BasicTable>
     </n-card>
     <CreateModal ref="createModalRef" :roleOption="roleOptions" @submit="handleAddUser" />
-    <EditModal ref="editModalRef" :roleOption="roleOptions" />
+    <EditModal ref="editModalRef" :roleOption="roleOptions" @submit="handleUpdateUser" />
   </div>
 </template>
 
 <script lang="ts" setup>
   import { reactive, ref, h, onMounted, nextTick } from 'vue';
-  import { useMessage } from 'naive-ui';
+  import { useMessage, useDialog } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
   import { BasicForm, useForm } from '@/components/Form/index';
   import { columns } from './columns';
@@ -49,11 +49,12 @@
   import { PlusOutlined, DeleteOutlined } from '@vicons/antd';
   import CreateModal from './CreateModal.vue';
   import EditModal from './EditModal.vue';
-  import { getUserList, addUser } from '@/api/system/user';
+  import { getUserList, addUser, updateUser, deleteUser } from '@/api/system/user';
   import { getAllRoles } from '@/api/system/role';
   import { SelectOption } from 'naive-ui';
 
   const message = useMessage();
+  const dialog = useDialog();
   const actionRef = ref();
   const createModalRef = ref();
   const editModalRef = ref();
@@ -134,6 +135,12 @@
     reloadTable();
   }
 
+  async function handleUpdateUser(id: number, record: Recordable) {
+    console.log('handleUpdateUser', record);
+    await updateUser(id, record);
+    reloadTable();
+  }
+
   function handleEdit(record: Recordable) {
     console.log('点击了编辑', record);
     const copy = Object.assign({}, record);
@@ -148,7 +155,20 @@
 
   function handleDelete(record: Recordable) {
     console.log('点击了删除', record);
-    message.info('点击了删除');
+    dialog.warning({
+      title: '删除操作',
+      content: `你确定要删除用户${record.username}吗？`,
+      positiveText: '确定',
+      negativeText: '取消',
+      draggable: true,
+      onPositiveClick: async () => {
+        await deleteUser(record.id);
+        reloadTable();
+      },
+      onNegativeClick: () => {
+        // message.error('不确定');
+      },
+    });
   }
 
   onMounted(async () => {

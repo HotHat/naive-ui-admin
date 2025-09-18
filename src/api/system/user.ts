@@ -78,3 +78,17 @@ export function getUserList(params) {
 export function addUser(params) {
   return Alova.Post('/v1/users', params);
 }
+
+/**
+ * @description: 更新用户
+ */
+export function updateUser(id: number, params) {
+  return Alova.Put(`/v1/users/${id}`, params);
+}
+
+/**
+ * @description: 删除用户
+ */
+export function deleteUser(id: number) {
+  return Alova.Delete(`/v1/users/${id}`);
+}
