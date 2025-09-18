@@ -56,7 +56,7 @@ export const Alova = createAlova({
   // 在开发环境开启缓存命中日志
   cacheLogger: process.env.NODE_ENV === 'development',
   cacheFor: {
-    expire: import.meta.env.VITE_GLOB_API_EXPIRE || 0,
+    expire: import.meta.env.VITE_GLOB_API_EXPIRE || null,
   },
   requestAdapter: mockAdapter,
   beforeRequest(method) {

@@ -1,8 +1,19 @@
-import { h } from 'vue';
-import { NTag, NSpace } from 'naive-ui';
-import { FormSchema } from '@/components/Form/index';
+import { FormSchema } from '@/components/Form';
 
 export const formSchemas: FormSchema[] = [
+  {
+    field: 'username',
+    // labelMessage: '这是一个提示',
+    component: 'NInput',
+    label: '',
+    componentProps: {
+      placeholder: '请输入用户名',
+      onInput: (e: any) => {
+        console.log(e);
+      },
+    },
+    // rules: [{ required: true, message: '请输入姓名', trigger: ['blur'] }],
+  },
   {
     field: 'name',
     // labelMessage: '这是一个提示',
@@ -17,7 +28,7 @@ export const formSchemas: FormSchema[] = [
     // rules: [{ required: true, message: '请输入姓名', trigger: ['blur'] }],
   },
   {
-    field: 'mobile',
+    field: 'phone',
     component: 'NInputNumber',
     label: '',
     componentProps: {
@@ -29,19 +40,23 @@ export const formSchemas: FormSchema[] = [
     },
   },
   {
-    field: 'type',
+    field: 'status',
     component: 'NSelect',
     label: '',
     componentProps: {
       placeholder: '请选择类型',
       options: [
         {
-          label: '舒适性',
+          label: '全部',
+          value: -1,
+        },
+        {
+          label: '启用',
           value: 1,
         },
         {
-          label: '经济性',
-          value: 2,
+          label: '禁用',
+          value: 0,
         },
       ],
       onUpdateValue: (e: any) => {

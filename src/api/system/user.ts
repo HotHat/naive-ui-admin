@@ -1,9 +1,5 @@
-import { permission } from '@/directives/permission';
 import { Alova } from '@/utils/http/alova/index';
-import { result } from 'lodash';
-import { defineMock } from '@alova/mock';
 import Mock from 'mockjs';
-import { userInfo } from 'os';
 
 const Random = Mock.Random;
 
@@ -71,7 +67,9 @@ export function logout(params) {
  * @description: 用户列表
  */
 export function getUserList(params) {
-  return Alova.Get<{ data: any[]; page: any }>('/v1/users', params);
+  return Alova.Get<{ data: any[]; page: any }>('/v1/users', {
+    params,
+  });
 }
 
 /**

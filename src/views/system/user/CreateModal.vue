@@ -10,8 +10,7 @@
   import { useForm } from '@/components/Form';
   import { basicModal, useModal } from '@/components/Modal';
   import { SelectOption } from 'naive-ui';
-  import { ref, nextTick } from 'vue';
-  import { addUser } from '@/api/system/user';
+  import { ref } from 'vue';
   import { onUpdated } from 'vue';
   import { getSchemas } from './columns';
 
@@ -19,7 +18,7 @@
     roleOption: SelectOption[];
   }
 
-  const emit = defineEmits(['add-user', 'register']);
+  const emit = defineEmits(['submit', 'register']);
 
   const props = defineProps<Props>();
 
@@ -37,9 +36,7 @@
     const formRes = await submit();
     if (formRes) {
       console.log('formRes', formRes);
-      await addUser(formRes);
-      emit('add-user');
-      nextTick();
+      emit('submit', formRes);
       closeModal();
     } else {
       setSubLoading(false);

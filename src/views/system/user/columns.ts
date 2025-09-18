@@ -6,6 +6,7 @@ export const columns = [
   {
     title: 'id',
     key: 'id',
+    width: 80,
   },
   {
     title: '用户名',
@@ -19,12 +20,13 @@ export const columns = [
     title: '所属角色',
     key: 'roles',
     render(row) {
+      const roles = row['roles'] || [];
       return h(
         NSpace,
         {},
         {
           default: () =>
-            row['roles'].map((item) =>
+            roles.map((item) =>
               h(
                 NTag,
                 {},
@@ -48,17 +50,17 @@ export const columns = [
       if (row.status === 1) {
         return h(
           NTag,
-          {},
+          { type: 'success' },
           {
-            default: () => '正常',
+            default: () => '启用',
           }
         );
       } else {
         return h(
           NTag,
-          { type: 'warning' },
+          {},
           {
-            default: () => '锁定',
+            default: () => '禁用',
           }
         );
       }

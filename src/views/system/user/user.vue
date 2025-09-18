@@ -19,7 +19,7 @@
         @update:checked-row-keys="onCheckedRow"
       >
         <template #tableTitle>
-          <n-button type="primary" @click="addUser">
+          <n-button type="primary" @click="addUserModal">
             <template #icon>
               <n-icon>
                 <PlusOutlined />
@@ -34,23 +34,22 @@
         </template>
       </BasicTable>
     </n-card>
-    <CreateModal ref="createModalRef" :roleOption="roleOptions" @add-user="reloadTable" />
+    <CreateModal ref="createModalRef" :roleOption="roleOptions" @submit="handleAddUser" />
     <EditModal ref="editModalRef" :roleOption="roleOptions" />
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref, unref, h, onMounted, nextTick } from 'vue';
+  import { reactive, ref, h, onMounted, nextTick } from 'vue';
   import { useMessage } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
   import { BasicForm, useForm } from '@/components/Form/index';
   import { columns } from './columns';
   import { formSchemas } from './FormSchemas';
   import { PlusOutlined, DeleteOutlined } from '@vicons/antd';
-  import { getTreeAll } from '@/utils';
   import CreateModal from './CreateModal.vue';
   import EditModal from './EditModal.vue';
-  import { getUserList } from '@/api/system/user';
+  import { getUserList, addUser } from '@/api/system/user';
   import { getAllRoles } from '@/api/system/role';
   import { SelectOption } from 'naive-ui';
 
@@ -58,16 +57,10 @@
   const actionRef = ref();
   const createModalRef = ref();
   const editModalRef = ref();
-  const showModal = ref(false);
-  const formBtnLoading = ref(false);
-
-  const params = reactive({
-    name: 'NaiveAdmin',
-  });
+  // const showModal = ref(false);
+  // const formBtnLoading = ref(false);
 
   const roleOptions = ref<SelectOption[]>([]);
-
-  const updateRole = ref(0);
 
   const actionColumn = reactive({
     width: 250,
@@ -104,11 +97,13 @@
   });
 
   const loadDataTable = async (res: any) => {
+    const formParams = getFieldsValue();
     let _params = {
-      ...unref(params),
-      ...res,
+      ...formParams,
+      current: res.page || 1,
+      pageSize: res.pageSize || 10,
     };
-    console.log('loadDataTable', _params);
+    console.log('loadDataTable', formParams, res, _params);
 
     // dataRef.value = data.data
     const { data, page } = await getUserList(_params);
@@ -121,7 +116,7 @@
     };
   };
 
-  function addUser() {
+  function addUserModal() {
     createModalRef.value.openModal();
   }
 
@@ -133,32 +128,22 @@
     actionRef.value.reload();
   }
 
-  function confirmForm(e: any) {
-    e.preventDefault();
-    formBtnLoading.value = true;
-    setTimeout(() => {
-      showModal.value = false;
-      message.success('提交成功');
-      reloadTable();
-      formBtnLoading.value = false;
-    }, 200);
-  }
-  function isNumberArray(value: any): value is number[] {
-    return (
-      Array.isArray(value) && // Check if the value is an array
-      value.every((item) => typeof item === 'number') // Check if every item in the array is a number
-    );
+  async function handleAddUser(record: Recordable) {
+    console.log('handleAddUser', record);
+    await addUser(record);
+    reloadTable();
   }
 
   function handleEdit(record: Recordable) {
     console.log('点击了编辑', record);
+    const copy = Object.assign({}, record);
     // router.push({ name: 'basic-info', params: { id: record.id } });
-    if (isNumberArray(record.roles)) {
-      editModalRef.value.showModal(record);
-    } else {
-      record.roles = record.roles.map((it) => it.id);
-      editModalRef.value.showModal(record);
-    }
+    // if (isNumberArray(record.roles)) {
+    // editModalRef.value.showModal(record);
+    // } else {
+    copy.roles = copy['roles'] ? copy.roles.map((it) => it.id) : [];
+    editModalRef.value.showModal(copy);
+    // }
   }
 
   function handleDelete(record: Recordable) {
