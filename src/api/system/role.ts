@@ -13,3 +13,11 @@ export function getRoleList(params) {
 export function getAllRoles() {
   return Alova.Get<any[]>('/v1/roles', {});
 }
+
+/**
+ * 获取角色详情
+ * @param id
+ */
+export function getRoleDetail(id: number) {
+  return Alova.Get<any>(`/v1/roles/${id}`);
+}

@@ -15,7 +15,7 @@
         @update:checked-row-keys="onCheckedRow"
       >
         <template #tableTitle>
-          <n-button type="primary" @click="addRole">
+          <n-button type="primary" @click="addRole" v-if="hasPermission(['/system/role/add'])">
             <template #icon>
               <n-icon>
                 <PlusOutlined />
@@ -69,13 +69,18 @@
   import { useMessage } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
   import { getRoleList } from '@/api/system/role';
-  import { getMenuList } from '@/api/system/menu';
+  import {} from '@/api/system/menu';
   import { columns } from './columns';
   import { PlusOutlined } from '@vicons/antd';
   import { getTreeAll } from '@/utils';
   import CreateModal from './CreateModal.vue';
   import EditModal from './EditModal.vue';
   import type { ListMenu } from '@/api/system/menu';
+  import { getMenuList, travelTree } from '@/api/system/menu';
+  import { getRoleDetail } from '@/api/system/role';
+  import { usePermission } from '@/hooks/web/usePermission';
+
+  const { hasPermission } = usePermission();
 
   const message = useMessage();
   const actionRef = ref();
@@ -86,11 +91,11 @@
   const checkedAll = ref(false);
   const editRoleTitle = ref('');
   const treeData = ref<ListMenu[]>([]);
-  const expandedKeys = ref<string[]>([]);
-  const checkedKeys = ref<string[]>(['console', 'step-form']);
+  const expandedKeys = ref<number[]>([]);
+  const checkedKeys = ref<number[]>([]);
 
   const params = reactive({
-    name: 'NaiveAdmin',
+    name: '',
   });
 
   const actionColumn = reactive({
@@ -110,7 +115,7 @@
               return true;
             },
             // 根据权限控制是否显示: 有权限，会显示，支持多个
-            auth: ['basic_list'],
+            auth: [],
           },
           {
             label: '编辑',
@@ -118,7 +123,7 @@
             ifShow: () => {
               return true;
             },
-            auth: ['basic_list'],
+            auth: ['/system/role/edit'],
           },
           {
             label: '删除',
@@ -128,7 +133,7 @@
               return true;
             },
             // 根据权限控制是否显示: 有权限，会显示，支持多个
-            auth: ['basic_list'],
+            auth: ['/system/role/delete'],
           },
         ],
       });
@@ -140,7 +145,15 @@
       ...unref(params),
       ...res,
     };
-    return await getRoleList(_params);
+    // return await getRoleList(_params);
+    const { data, page } = await getRoleList(_params);
+    return {
+      page: page.current,
+      pageSize: page.pageSize,
+      pageCount: Math.floor(page.total / page.pageSize),
+      itemCount: page.total,
+      list: data,
+    };
   };
 
   function addRole() {
@@ -177,9 +190,13 @@
     message.info('点击了删除');
   }
 
-  function handleMenuAuth(record: Recordable) {
+  async function handleMenuAuth(record: Recordable) {
+    console.log('handleMenuAuth', record);
+    const detail = await getRoleDetail(record.id);
+    console.log('handleMenuAuth', detail);
+    expandedKeys.value = detail.menus.map((item) => item.id);
+    checkedKeys.value = expandedKeys.value;
     editRoleTitle.value = `分配 ${record.name} 的菜单权限`;
-    checkedKeys.value = record.menu_keys;
     showModal.value = true;
   }
 
@@ -211,8 +228,7 @@
 
   onMounted(async () => {
     const treeMenuList = await getMenuList();
-    expandedKeys.value = treeMenuList?.list.map((item) => item.key);
-    treeData.value = treeMenuList?.list;
+    treeData.value = travelTree(treeMenuList);
   });
 </script>
 

@@ -64,6 +64,56 @@ export const RespMethods = [
   },
 ];
 
+export function flattenTree(nodes: any[]): any[] {
+  let flatNodes: any[] = [];
+
+  for (const node of nodes) {
+    // Add the current node to the flat array
+    flatNodes.push({
+      id: node.id,
+      label: node.label,
+      key: node.id,
+      type: node.type,
+      value: node.id,
+    });
+
+    // Recursively flatten children if they exist
+    if (node.children && node.children.length > 0) {
+      flatNodes = flatNodes.concat(flattenTree(node.children));
+    }
+  }
+
+  return flatNodes;
+}
+
+export function travelTree(nodes: any[]): any[] {
+  const flatNodes: any[] = [];
+
+  for (const node of nodes) {
+    // Add the current node to the flat array
+    const item = {
+      id: node.id,
+      parentId: node.parent_id,
+      label: node.name,
+      key: node.id,
+      type: node.type,
+      value: node.id,
+      path: node.path,
+      children: null as any,
+      resources: node.resources,
+      order: node.sequence,
+    };
+
+    // Recursively flatten children if they exist
+    if (node.children && node.children.length > 0) {
+      item.children = travelTree(node.children);
+    }
+    flatNodes.push(item);
+  }
+
+  return flatNodes;
+}
+
 /**
  * @description: 根据用户id获取用户菜单
  */
@@ -88,3 +138,5 @@ export function getMenuList(params?) {
 export function addMenu(data) {
   return Alova.Post('/v1/menus', data);
 }
+
+
