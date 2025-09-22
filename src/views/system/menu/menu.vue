@@ -96,6 +96,24 @@
             <n-form-item label="标题" path="label">
               <n-input placeholder="请输入标题" v-model:value="formParams.label" />
             </n-form-item>
+            <n-form-item label="类型" path="type">
+              <n-radio
+                :checked="formParams.type === 'page'"
+                value="page"
+                name="type"
+                @change="handleTypeChange"
+              >
+                菜单
+              </n-radio>
+              <n-radio
+                :checked="formParams.type === 'button'"
+                value="button"
+                name="type"
+                @change="handleTypeChange"
+              >
+                按钮
+              </n-radio>
+            </n-form-item>
             <!-- <n-form-item label="副标题" path="subtitle">
               <n-input placeholder="请输入副标题" v-model:value="formParams.subtitle" />
             </n-form-item> -->
@@ -208,7 +226,7 @@
     PlusOutlined,
     DeleteOutlined,
   } from '@vicons/antd';
-  import { getMenuList, MenuParent, Resource, MenuItem } from '@/api/system/menu';
+  import { getMenuList, MenuParent, Resource, RespMethods } from '@/api/system/menu';
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
   import type { ListMenu } from '@/api/system/menu';
@@ -249,38 +267,14 @@
     id: 0,
     label: '无父级菜单',
     value: 0,
+    type: '',
   });
 
   let optionParentId = ref(0);
 
   let expandedKeys = ref([]);
   let selectOptions = ref<any>([]);
-  const RespMethods = [
-    {
-      label: 'GET',
-      value: 'GET',
-    },
-    {
-      label: 'POST',
-      value: 'POST',
-    },
-    {
-      label: 'PUT',
-      value: 'PUT',
-    },
-    {
-      label: 'DELETE',
-      value: 'DELETE',
-    },
-    {
-      label: 'PATCH',
-      value: 'PATCH',
-    },
-    {
-      label: 'HEAD',
-      value: 'HEAD',
-    },
-  ];
+
 
   const treeData = ref<ListMenu[]>([]);
 
@@ -292,7 +286,7 @@
   const drawerTitle = ref('');
 
   const isAddSon = computed(() => {
-    return !treeItemKey.value.length;
+    return !treeItemKey.value.length || parentItem.value.type !== 'page';
   });
 
   const addMenuOptions = ref([
@@ -309,7 +303,7 @@
   ]);
 
   const formParams = reactive({
-    type: 1,
+    type: 'page',
     parentId: 0,
     parentTitle: '',
     label: '',
@@ -320,6 +314,10 @@
     order: '',
     resources: [] as Resource[],
   });
+
+  function handleTypeChange(e: Event) {
+    formParams.type = (e.target as HTMLInputElement).value;
+  }
 
   function onCreate() {
     return formParams.resources;
@@ -342,6 +340,7 @@
         id: 0,
         label: '无父级菜单',
         value: 0,
+        type: 'page',
       };
     }
 
@@ -367,7 +366,9 @@
         id: treeItem.id,
         label: treeItem.label,
         value: treeItem.id,
+        type: treeItem.type,
       };
+      console.log('selectedTree', optionParentId.value, treeItem);
     } else {
       isEditMenu.value = false;
       treeItemKey.value = [];
@@ -423,7 +424,7 @@
       // Add the current node to the flat array
       flatNodes.push({
         id: node.id,
-        label: node.labl,
+        label: node.label,
         key: node.id,
         type: node.type,
         value: node.id,
@@ -445,6 +446,7 @@
       // Add the current node to the flat array
       let item = {
         id: node.id,
+        parentId: node.parent_id,
         label: node.name,
         key: node.id,
         type: node.type,
@@ -452,6 +454,7 @@
         path: node.path,
         children: null as any,
         resources: node.resources,
+        order: node.sequence,
       };
 
       // Recursively flatten children if they exist
@@ -465,7 +468,7 @@
   }
 
   onMounted(async () => {
-    const { data } = await getMenuList();
+    const data = await getMenuList();
     const treeMenuList = travelTree(data);
     console.log('menu data', data);
     console.log('menu list', treeMenuList);
@@ -477,7 +480,7 @@
       value: 0,
     });
     selectOptions.value = flat;
-    console.log(flat);
+    console.log('flatten tree', flat);
     console.log(selectOptions.value);
     Object.assign(formParams, keys);
     treeData.value = treeMenuList;

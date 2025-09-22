@@ -4,6 +4,7 @@ export interface MenuParent {
   id: number;
   label: string;
   value: number;
+  type: string;
 }
 
 export interface Resource {
@@ -36,6 +37,33 @@ export interface MenuItem {
   resources?: Resource[];
 }
 
+export const RespMethods = [
+  {
+    label: 'GET',
+    value: 'GET',
+  },
+  {
+    label: 'POST',
+    value: 'POST',
+  },
+  {
+    label: 'PUT',
+    value: 'PUT',
+  },
+  {
+    label: 'DELETE',
+    value: 'DELETE',
+  },
+  {
+    label: 'PATCH',
+    value: 'PATCH',
+  },
+  {
+    label: 'HEAD',
+    value: 'HEAD',
+  },
+];
+
 /**
  * @description: 根据用户id获取用户菜单
  */
@@ -48,7 +76,7 @@ export function adminMenus() {
  * @param params
  */
 export function getMenuList(params?) {
-  return Alova.Get<{ data: MenuItem[] }>('/v1/menus', {
+  return Alova.Get<MenuItem[]>('/v1/menus', {
     params,
   });
 }
@@ -58,5 +86,5 @@ export function getMenuList(params?) {
  * @param data
  */
 export function addMenu(data) {
-  return Alova.Post('/menu/add', data);
+  return Alova.Post('/v1/menus', data);
 }
