@@ -186,6 +186,17 @@ export function getTreeAll(data: any[]): any[] {
   return treeAll;
 }
 
+export function getTreeAll2(data: any[], key = 'key'): any[] {
+  let treeAll: any[] = [];
+  for (const item of data) {
+    treeAll.push(item[key]);
+    if (item.children && item.children.length) {
+      treeAll = treeAll.concat(getTreeAll2(item.children, key));
+    }
+  }
+  return treeAll;
+}
+
 // dynamic use hook props
 export function getDynamicProps<T extends {}, U>(props: T): Partial<U> {
   const ret: Recordable = {};
@@ -238,5 +249,3 @@ export function lighten(color: string, amount: number) {
 export function isUrl(url: string) {
   return /^(http|https):\/\//g.test(url);
 }
-
-

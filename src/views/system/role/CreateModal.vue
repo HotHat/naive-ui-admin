@@ -10,6 +10,8 @@
   import { FormSchema, useForm } from '@/components/Form';
   import { basicModal, useModal } from '@/components/Modal';
 
+  const emit = defineEmits(['submit', 'register']);
+
   const schemas: FormSchema[] = [
     {
       field: 'name',
@@ -21,7 +23,7 @@
       rules: [{ required: true, message: '请输入角色名称', trigger: ['blur'] }],
     },
     {
-      field: 'explain',
+      field: 'description',
       component: 'NInput',
       label: '角色说明',
       componentProps: {
@@ -30,10 +32,14 @@
       },
     },
     {
-      field: 'isDefault',
+      field: 'status',
       component: 'NSwitch',
-      label: '默认角色',
-      componentProps: {},
+      label: '状态',
+      defaultValue: 1,
+      componentProps: {
+        checkedValue: 1,
+        uncheckedValue: 0,
+      },
     },
   ];
 
@@ -55,8 +61,9 @@
   async function okModal() {
     const formRes = await submit();
     if (formRes) {
-      closeModal();
       console.log('formRes', formRes);
+      emit('submit', formRes);
+      closeModal();
     } else {
       setSubLoading(false);
     }

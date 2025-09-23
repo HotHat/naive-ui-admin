@@ -15,7 +15,7 @@
         @update:checked-row-keys="onCheckedRow"
       >
         <template #tableTitle>
-          <n-button type="primary" @click="addRole" v-if="hasPermission(['/system/role/add'])">
+          <n-button type="primary" @click="openAddRole" v-if="hasPermission(['/system/role/add'])">
             <template #icon>
               <n-icon>
                 <PlusOutlined />
@@ -59,25 +59,23 @@
         </n-space>
       </template>
     </n-modal>
-    <CreateModal ref="createModalRef" />
-    <EditModal ref="editModalRef" />
+    <CreateModal ref="createModalRef" @submit="handleAddRole" />
+    <EditModal ref="editModalRef" @submit="handleEditRole" />
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref, unref, h, onMounted } from 'vue';
+  import { h, onMounted, reactive, ref, unref } from 'vue';
   import { useMessage } from 'naive-ui';
   import { BasicTable, TableAction } from '@/components/Table';
-  import { getRoleList } from '@/api/system/role';
-  import {} from '@/api/system/menu';
-  import { columns } from './columns';
-  import { PlusOutlined } from '@vicons/antd';
-  import { getTreeAll } from '@/utils';
-  import CreateModal from './CreateModal.vue';
-  import EditModal from './EditModal.vue';
+  import { addRole, getRoleDetail, getRoleList, updateRolePermissions } from '@/api/system/role';
   import type { ListMenu } from '@/api/system/menu';
   import { getMenuList, travelTree } from '@/api/system/menu';
-  import { getRoleDetail } from '@/api/system/role';
+  import { columns } from './columns';
+  import { PlusOutlined } from '@vicons/antd';
+  import { getTreeAll2 } from '@/utils';
+  import CreateModal from './CreateModal.vue';
+  import EditModal from './EditModal.vue';
   import { usePermission } from '@/hooks/web/usePermission';
 
   const { hasPermission } = usePermission();
@@ -93,6 +91,7 @@
   const treeData = ref<ListMenu[]>([]);
   const expandedKeys = ref<number[]>([]);
   const checkedKeys = ref<number[]>([]);
+  let currentItem: Recordable | null = null;
 
   const params = reactive({
     name: '',
@@ -156,7 +155,7 @@
     };
   };
 
-  function addRole() {
+  function openAddRole() {
     createModalRef.value.openModal();
   }
 
@@ -168,21 +167,39 @@
     actionRef.value.reload();
   }
 
-  function confirmForm(e: any) {
+  async function confirmForm(e: any) {
     e.preventDefault();
     formBtnLoading.value = true;
-    setTimeout(() => {
-      showModal.value = false;
-      message.success('提交成功');
-      reloadTable();
-      formBtnLoading.value = false;
-    }, 200);
+    console.log('confirmFrom', currentItem, checkedKeys.value);
+    const params: any = unref(currentItem);
+    params.menus = checkedKeys.value.map((item) => {
+      return {
+        role_id: params.id,
+        menu_id: item,
+      };
+    });
+    await updateRolePermissions(currentItem?.id, params);
+    formBtnLoading.value = false;
+    showModal.value = false;
+    reloadTable();
+  }
+
+  async function handleAddRole(record: Recordable) {
+    await addRole(record);
+    reloadTable();
   }
 
   function handleEdit(record: Recordable) {
     console.log('点击了编辑', record);
-    // router.push({ name: 'basic-info', params: { id: record.id } });
+    currentItem = record;
     editModalRef.value.showModal(record);
+  }
+
+  async function handleEditRole(record: Recordable) {
+    const { id, ...params } = record;
+    console.log('handleEditRole', record);
+    await updateRolePermissions(currentItem?.id, params);
+    reloadTable();
   }
 
   function handleDelete(record: Recordable) {
@@ -194,14 +211,17 @@
     console.log('handleMenuAuth', record);
     const detail = await getRoleDetail(record.id);
     console.log('handleMenuAuth', detail);
-    expandedKeys.value = detail.menus.map((item) => item.id);
-    checkedKeys.value = expandedKeys.value;
+    expandedKeys.value = detail.menus.map((item) => item.menu_id);
+    checkedKeys.value = detail.menus.map((item) => item.menu_id);
     editRoleTitle.value = `分配 ${record.name} 的菜单权限`;
     showModal.value = true;
+    currentItem = record;
+    console.log('handleMenuAuth expandedKeys', expandedKeys.value);
   }
 
   function checkedTree(keys) {
-    checkedKeys.value = [checkedKeys.value, ...keys];
+    console.log('checked Tree', keys);
+    checkedKeys.value = [...keys];
   }
 
   function onExpandedKeys(keys) {
@@ -212,13 +232,13 @@
     if (expandedKeys.value.length) {
       expandedKeys.value = [];
     } else {
-      expandedKeys.value = treeData.value.map((item: any) => item.key) as [];
+      expandedKeys.value = treeData.value.map((item: any) => item.id) as [];
     }
   }
 
   function checkedAllHandle() {
     if (!checkedAll.value) {
-      checkedKeys.value = getTreeAll(treeData.value);
+      checkedKeys.value = getTreeAll2(treeData.value, 'id');
       checkedAll.value = true;
     } else {
       checkedKeys.value = [];
@@ -228,6 +248,7 @@
 
   onMounted(async () => {
     const treeMenuList = await getMenuList();
+    // expandedKeys.value = getTreeAll2(treeMenuList, 'id');
     treeData.value = travelTree(treeMenuList);
   });
 </script>

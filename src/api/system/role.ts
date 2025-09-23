@@ -21,3 +21,19 @@ export function getAllRoles() {
 export function getRoleDetail(id: number) {
   return Alova.Get<any>(`/v1/roles/${id}`);
 }
+
+/**
+ * 添加角色
+ * @param params
+ */
+export function addRole(params: any) {
+  return Alova.Post<any>(`/v1/roles`, params);
+}
+
+/**
+ * 更新角色权限
+ * @param params
+ */
+export function updateRolePermissions(id: number, params: any) {
+  return Alova.Put<any>(`/v1/roles/${id}`, params);
+}

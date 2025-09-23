@@ -229,8 +229,8 @@
   import { getMenuList, MenuParent, Resource, RespMethods } from '@/api/system/menu';
   import { getTreeItem } from '@/utils';
   import CreateDrawer from './CreateDrawer.vue';
-  import type { ListMenu, flattenTree, travelTree } from '@/api/system/menu';
-  import { pathToFileURL } from 'url';
+  import type { ListMenu } from '@/api/system/menu';
+  import { flattenTree, travelTree } from '@/api/system/menu';
 
   const rules = {
     label: {
