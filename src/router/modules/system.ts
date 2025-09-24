@@ -13,6 +13,8 @@ const routes: Array<RouteRecordRaw> = [
       title: '系统设置',
       icon: renderIcon(OptionsSharp),
       sort: 1,
+      alwaysShow: true,
+      permissions: ['/system'],
     },
     children: [
       {
@@ -20,6 +22,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'system_menu',
         meta: {
           title: '菜单管理',
+          permissions: ['/system/menu'],
         },
         component: () => import('@/views/system/menu/menu.vue'),
       },
@@ -28,6 +31,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'system_role',
         meta: {
           title: '角色管理',
+          permissions: ['/system/role'],
         },
         component: () => import('@/views/system/role/role.vue'),
       },
@@ -36,6 +40,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'system_user',
         meta: {
           title: '用户管理',
+          permissions: ['/system/user'],
         },
         component: () => import('@/views/system/user/user.vue'),
       },
